@@ -1,6 +1,6 @@
 import sys
-FILE_NAME_ARGP = 0
-CLIENTS_NUM_ARGP = 1
+FILE_NAME_ARGP = 1
+CLIENTS_NUM_ARGP = 2
 DOCKER_PROY_NAME = "name: tp0"
 DOCKER_SERVER_CONFIG = [
     "  server:\n",
@@ -15,6 +15,7 @@ DOCKER_SERVER_CONFIG = [
 ]
 
 DOCKER_NETWORKS_CONFIG = [
+    "\n",
     "networks:\n", 
     "  testing_net:\n", 
     "    ipam:\n", 
@@ -23,16 +24,21 @@ DOCKER_NETWORKS_CONFIG = [
     "        - subnet: 172.25.125.0/24\n"
 ]
 
+#
+#
+# TO DO !!!! PROCESAR INPUT 
+#
+#
 def main():
     with open(sys.argv[FILE_NAME_ARGP], 'w') as f:
         f.writelines(DOCKER_PROY_NAME+"\n")
         f.write("services:"+"\n")
         f.writelines(DOCKER_SERVER_CONFIG)
 
-        for num in range(1,sys.argv[CLIENTS_NUM_ARGP]+1):
+        for num in range(1,int(sys.argv[CLIENTS_NUM_ARGP])+1):
             client_config = [
+                 "\n",
                 f"  client{num}:\n",
-                f"    container_name: client{num}\n",
                 f"    container_name: client{num}\n",
                  "    image: client:latest\n", 
                  "    entrypoint: /client\n",
@@ -49,38 +55,3 @@ def main():
         f.writelines(DOCKER_NETWORKS_CONFIG)
 
 main()
-
-# MODELO
-""" 
-name: tp0
-services:
-  server:
-    container_name: server
-    image: server:latest
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=DEBUG
-    networks:
-      - testing_net
-
-  client1:
-    container_name: client1
-    image: client:latest
-    entrypoint: /client
-    environment:
-      - CLI_ID=1
-      - CLI_LOG_LEVEL=DEBUG
-    networks:
-      - testing_net
-    depends_on:
-      - server
-
-networks:
-  testing_net:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.25.125.0/24
-
-"""
