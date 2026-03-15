@@ -11,7 +11,11 @@ DOCKER_SERVER_CONFIG = [
     "      - PYTHONUNBUFFERED=1\n", 
     "      - LOGGING_LEVEL=DEBUG\n",
     "    networks:\n",
-    "      - testing_net\n"
+    "      - testing_net\n",
+    "    volumes:\n",
+    "      - type: bind\n",
+    "        source: ./server/config.ini\n",
+    "        target: /config.ini\n"
 ]
 
 DOCKER_NETWORKS_CONFIG = [
@@ -48,7 +52,11 @@ def main():
                  "    networks:\n",
                  "      - testing_net\n",
                  "    depends_on:\n",
-                 "      - server\n"
+                 "      - server\n",
+                 "    volumes:\n",
+                 "      - type: bind\n",
+                 "        source: ./client/config.yaml\n",
+                 "        target: /build/config.yaml\n"
             ]
             f.writelines(client_config)
 
