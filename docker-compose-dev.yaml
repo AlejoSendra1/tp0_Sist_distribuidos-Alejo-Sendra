@@ -28,7 +28,7 @@ services:
     volumes:
       - type: bind
         source: ./client/config.yaml
-        target: /build/config.yaml
+        target: /config.yaml
 
 networks:
   testing_net:

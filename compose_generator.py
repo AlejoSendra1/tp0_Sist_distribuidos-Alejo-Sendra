@@ -56,7 +56,7 @@ def main():
                  "    volumes:\n",
                  "      - type: bind\n",
                  "        source: ./client/config.yaml\n",
-                 "        target: /build/config.yaml\n"
+                 "        target: /config.yaml\n"
             ]
             f.writelines(client_config)
 
