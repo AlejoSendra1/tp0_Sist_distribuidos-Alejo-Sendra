@@ -1,3 +1,5 @@
+#!/bin/bash
+
 TEST_MESSAGE="Probando ando 123"
 
 docker run -d -i --name server_echo_tester --rm --network "tp0_testing_net" ubuntu
@@ -8,7 +10,7 @@ RESPONSE=$(echo -n "$TEST_MESSAGE" | docker exec -i server_echo_tester nc server
 
 docker stop server_echo_tester
 
-if [ "$RESPONSE" == "$TEST_MESSAGE" ]; then
+if [ "$RESPONSE" = "$TEST_MESSAGE" ]; then
     echo "action: test_echo_server | result: success"
     exit 0
 else
