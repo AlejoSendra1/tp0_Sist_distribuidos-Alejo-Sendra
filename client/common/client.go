@@ -78,7 +78,7 @@ func (c *Client) StartClientLoop() {
 		msg, err := bufio.NewReader(c.conn).ReadString('\n')
 		
 		c.conn.Close()
-		log.Errorf("action: socket_closed | result: success | client_id: %v",
+		log.Infof("action: socket_closed | result: success | client_id: %v",
 			c.config.ID,
 		)
 
@@ -97,8 +97,8 @@ func (c *Client) StartClientLoop() {
 
 		select {
 			case <-c.signalChannel:
-            	log.Infof("action: SIGTERM_caught | client_id: %v", c.config.ID)
-            	log.Infof("action: shutting_down | client_id: %v", c.config.ID)
+            	log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
+            	log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
             return
         	case <-time.After(c.config.LoopPeriod):
         }

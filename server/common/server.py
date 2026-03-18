@@ -10,10 +10,12 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self.client_sock = None
+        self.is_shutting_down = False
         signal.signal(signal.SIGTERM, self.handle_sigterm)
 
     def handle_sigterm(self):
-        logging.info("action: SIGTERM_caught | server")
+        logging.info("action: shutting_down | result: in_process | server")
+        self.is_shutting_down = True
 
         logging.info("action: clossing_lisening_socket | server")
         self._server_socket.close()
@@ -23,7 +25,7 @@ class Server:
         self.client_sock.close()
         logging.info("action: clossing_client_socket | result: success | server")
 
-        logging.info("action: shutting_down | server")
+        logging.info("action: shutting_down | result: success | server")
         
 
 
@@ -57,6 +59,8 @@ class Server:
             # TODO: Modify the send to avoid short-writes
             self.client_sock.send("{}\n".format(msg).encode('utf-8'))
         except OSError as e:
+            if self.is_shutting_down:
+                return
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
             self.client_sock.close()
