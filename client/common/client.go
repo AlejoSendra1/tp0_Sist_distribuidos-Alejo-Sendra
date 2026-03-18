@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net"
 	"time"
+	"os"
+    "os/signal"
+	"syscall"
 
 	"github.com/op/go-logging"
 )
@@ -23,14 +26,21 @@ type ClientConfig struct {
 type Client struct {
 	config ClientConfig
 	conn   net.Conn
+	signalChannel chan os.Signal
 }
 
 // NewClient Initializes a new client receiving the configuration
 // as a parameter
 func NewClient(config ClientConfig) *Client {
+
+	channel:= make(chan os.Signal, 1)
+	signal.Notify(channel, syscall.SIGTERM, os.Interrupt)
+
 	client := &Client{
 		config: config,
+		signalChannel: channel,
 	}
+
 	return client
 }
 
@@ -66,7 +76,11 @@ func (c *Client) StartClientLoop() {
 			msgID,
 		)
 		msg, err := bufio.NewReader(c.conn).ReadString('\n')
+		
 		c.conn.Close()
+		log.Errorf("action: socket_closed | result: success | client_id: %v",
+			c.config.ID,
+		)
 
 		if err != nil {
 			log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
@@ -80,6 +94,15 @@ func (c *Client) StartClientLoop() {
 			c.config.ID,
 			msg,
 		)
+
+		select {
+			case <-c.signalChannel:
+            	log.Infof("action: SIGTERM_caught | client_id: %v", c.config.ID)
+            	log.Infof("action: shutting_down | client_id: %v", c.config.ID)
+            return
+        	case <-time.After(c.config.LoopPeriod):
+        }
+		
 
 		// Wait a time between sending one message and the next one
 		time.Sleep(c.config.LoopPeriod)
