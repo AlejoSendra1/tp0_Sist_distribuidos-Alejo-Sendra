@@ -22,7 +22,8 @@ class Server:
         logging.info("action: clossing_lisening_socket | result: success | server")
 
         logging.info("action: clossing_client_socket | server")
-        self.client_sock.close()
+        if self.client_sock:
+            self.client_sock.close()
         logging.info("action: clossing_client_socket | result: success | server")
 
         logging.info("action: shutting_down | result: success | server")
@@ -38,7 +39,6 @@ class Server:
         finishes, servers starts to accept new connections again
         """
 
-        # TODO: Modify this program to handle signal to graceful shutdown
         # the server
         while True:
             self.__accept_new_connection()
@@ -75,7 +75,15 @@ class Server:
 
         # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
-        c, addr = self._server_socket.accept()
-        self.client_sock = c
+
+        try:
+            c, addr = self._server_socket.accept()
+            self.client_sock = c
+        except OSError as e:
+            if self.is_shutting_down:
+                return
+            logging.error("action: accept_connections | result: fail | error: {e}")
+        finally:
+            self._server_socket.close()
         logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
         return 
