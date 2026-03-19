@@ -14,27 +14,27 @@ class Server:
         signal.signal(signal.SIGTERM, self.handle_sigterm)
 
     def handle_sigterm(self, signum, frame):
-        logging.info("action: shutting_down | result: in_progress | server")
+        logging.info("action: shutting_down | result: in_progress")
         self.is_shutting_down = True       
 
         try:
-            logging.info("action: clossing_listening_socket | result: in_progress | server")
+            logging.info("action: clossing_listening_socket | result: in_progress")
             self._server_socket.close()
-            logging.info("action: clossing_listening_socket | result: success | server")
+            logging.info("action: clossing_listening_socket | result: success")
         except OSError as e:
-            logging.info("action: clossing_listening_socket | result: fail | server")
+            logging.info("action: clossing_listening_socket | result: fail")
             exit(1)
 
         try:
             if self.client_sock is not None:
-                logging.info("action: clossing_client_socket | result: in_progress | server")
+                logging.info("action: clossing_client_socket | result: in_progress")
                 self.client_sock.close()
-                logging.info("action: clossing_client_socket | result: success | server")
+                logging.info("action: clossing_client_socket | result: success")
         except OSError as e:
-            logging.info("action: clossing_client_socket | result: fail | server")
+            logging.info("action: clossing_client_socket | result: fail")
             exit(1)
         
-        logging.info("action: shutting_down | result: success | server")    
+        logging.info("action: shutting_down | result: success")    
         exit(0)
 
     def run(self):
