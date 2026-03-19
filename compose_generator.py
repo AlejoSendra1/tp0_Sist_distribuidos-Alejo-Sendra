@@ -27,37 +27,43 @@ DOCKER_NETWORKS_CONFIG = [
     "        - subnet: 172.25.125.0/24\n"
 ]
 
-#
-#
-# TO DO !!!! PROCESAR INPUT 
-#
-#
 def main():
-    with open(sys.argv[FILE_NAME_ARGP], 'w') as f:
-        f.writelines(DOCKER_PROY_NAME+"\n")
-        f.write("services:"+"\n")
-        f.writelines(DOCKER_SERVER_CONFIG)
+    if not sys.argv[CLIENTS_NUM_ARGP].isdigit():
+        print(f'Error: Argument {sys.argv[CLIENTS_NUM_ARGP]} is not a valid integer')
+        return
 
-        for num in range(1,int(sys.argv[CLIENTS_NUM_ARGP])+1):
-            client_config = [
-                 "\n",
-                f"  client{num}:\n",
-                f"    container_name: client{num}\n",
-                 "    image: client:latest\n", 
-                 "    entrypoint: /client\n",
-                 "    environment:\n", 
-                f"      - CLI_ID={num}\n",
-                 "    networks:\n",
-                 "      - testing_net\n",
-                 "    depends_on:\n",
-                 "      - server\n",
-                 "    volumes:\n",
-                 "      - type: bind\n",
-                 "        source: ./client/config.yaml\n",
-                 "        target: /config.yaml\n"
-            ]
-            f.writelines(client_config)
+    try: 
+        with open(sys.argv[FILE_NAME_ARGP], 'w') as f:
+            f.writelines(DOCKER_PROY_NAME+"\n")
+            f.write("services:"+"\n")
+            f.writelines(DOCKER_SERVER_CONFIG)
 
-        f.writelines(DOCKER_NETWORKS_CONFIG)
+            for num in range(1,int(sys.argv[CLIENTS_NUM_ARGP])+1):
+                client_config = [
+                        "\n",
+                    f"  client{num}:\n",
+                    f"    container_name: client{num}\n",
+                        "    image: client:latest\n", 
+                        "    entrypoint: /client\n",
+                        "    environment:\n", 
+                    f"      - CLI_ID={num}\n",
+                        "    networks:\n",
+                        "      - testing_net\n",
+                        "    depends_on:\n",
+                        "      - server\n",
+                        "    volumes:\n",
+                        "      - type: bind\n",
+                        "        source: ./client/config.yaml\n",
+                        "        target: /config.yaml\n"
+                ]
+                f.writelines(client_config)
+
+            f.writelines(DOCKER_NETWORKS_CONFIG)
+    
+    except PermissionError:
+        print(f"Error: You don't have permission to write to '{sys.argv[FILE_NAME_ARGP]}'.")
+    except OSError as e:
+        print(f'error: {e}')
+    # agregar de nombre invalido tmb
 
 main()
