@@ -15,19 +15,9 @@ class Server:
 
     def handle_sigterm(self):
         logging.info("action: shutting_down | result: in_process | server")
-        self.is_shutting_down = True
-
-        logging.info("action: clossing_lisening_socket | server")
-        self._server_socket.close()
-        logging.info("action: clossing_lisening_socket | result: success | server")
-
-        logging.info("action: clossing_client_socket | server")
-        if self.client_sock:
-            self.client_sock.close()
-        logging.info("action: clossing_client_socket | result: success | server")
-
-        logging.info("action: shutting_down | result: success | server")
+        self.is_shutting_down = True       
         
+
 
 
     def run(self):
@@ -40,9 +30,11 @@ class Server:
         """
 
         # the server
-        while True:
+        while not self.is_shutting_down:
             self.__accept_new_connection()
             self.__handle_client_connection()
+        logging.info("action: shutting_down | result: success | server")
+        
 
     def __handle_client_connection(self):
         """
@@ -64,6 +56,8 @@ class Server:
             logging.error("action: receive_message | result: fail | error: {e}")
         finally:
             self.client_sock.close()
+            logging.info(f'action: clossing_client_socket | result: success | ip: addr[0]')
+
 
     def __accept_new_connection(self):
         """
@@ -81,9 +75,10 @@ class Server:
             self.client_sock = c
         except OSError as e:
             if self.is_shutting_down:
+                self._server_socket.close()
+                logging.info("action: clossing_listening_socket | result: success")
                 return
-            logging.error("action: accept_connections | result: fail | error: {e}")
-        finally:
-            self._server_socket.close()
+            logging.error("action: receive_message | result: fail | error: {e}")
+
         logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
         return 
