@@ -17,6 +17,23 @@ class Server:
         logging.info("action: shutting_down | result: in_process | server")
         self.is_shutting_down = True       
         
+    def gracefull_shutdown(self):
+        try:
+            logging.info("action: clossing_listening_socket | result: in_process | server")
+            self._server_socket.close()
+        except OSError as e:
+            logging.info("action: clossing_listening_socket | result: fail | server")
+            exit(1)
+        logging.info("action: clossing_listening_socket | result: success | server")
+
+        try:
+            if self.client_sock:
+                logging.info("action: clossing_client_socket | result: in_process | server")
+                self._server_socket.close()
+        except OSError as e:
+            logging.info("action: clossing_client_socket | result: fail | server")
+            exit(1)
+        logging.info("action: clossing_client_socket | result: success | server")
 
 
 
@@ -32,7 +49,13 @@ class Server:
         # the server
         while not self.is_shutting_down:
             self.__accept_new_connection()
+            
+            if self.is_shutting_down:
+                break
+            
             self.__handle_client_connection()
+
+        self.gracefull_shutdown()
         logging.info("action: shutting_down | result: success | server")
         
 
@@ -73,6 +96,8 @@ class Server:
         try:
             c, addr = self._server_socket.accept()
             self.client_sock = c
+            logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
+
         except OSError as e:
             if self.is_shutting_down:
                 self._server_socket.close()
@@ -80,5 +105,4 @@ class Server:
                 return
             logging.error("action: receive_message | result: fail | error: {e}")
 
-        logging.info(f'action: accept_connections | result: success | ip: {addr[0]}')
         return 
