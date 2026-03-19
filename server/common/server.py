@@ -13,29 +13,29 @@ class Server:
         self.is_shutting_down = False
         signal.signal(signal.SIGTERM, self.handle_sigterm)
 
-    def handle_sigterm(self):
-        logging.info("action: shutting_down | result: in_process | server")
+    def handle_sigterm(self, signum, frame):
+        logging.info("action: shutting_down | result: in_progress | server")
         self.is_shutting_down = True       
-        
-    def gracefull_shutdown(self):
+
         try:
-            logging.info("action: clossing_listening_socket | result: in_process | server")
+            logging.info("action: clossing_listening_socket | result: in_progress | server")
             self._server_socket.close()
+            logging.info("action: clossing_listening_socket | result: success | server")
         except OSError as e:
             logging.info("action: clossing_listening_socket | result: fail | server")
             exit(1)
-        logging.info("action: clossing_listening_socket | result: success | server")
 
         try:
-            if self.client_sock:
-                logging.info("action: clossing_client_socket | result: in_process | server")
-                self._server_socket.close()
+            if self.client_sock is not None:
+                logging.info("action: clossing_client_socket | result: in_progress | server")
+                self.client_sock.close()
+                logging.info("action: clossing_client_socket | result: success | server")
         except OSError as e:
             logging.info("action: clossing_client_socket | result: fail | server")
             exit(1)
-        logging.info("action: clossing_client_socket | result: success | server")
-
-
+        
+        logging.info("action: shutting_down | result: success | server")    
+        exit(0)
 
     def run(self):
         """
@@ -56,9 +56,7 @@ class Server:
             self.__handle_client_connection()
 
         self.gracefull_shutdown()
-        logging.info("action: shutting_down | result: success | server")
         
-
     def __handle_client_connection(self):
         """
         Read message from a specific client socket and closes the socket
@@ -100,9 +98,7 @@ class Server:
 
         except OSError as e:
             if self.is_shutting_down:
-                self._server_socket.close()
-                logging.info("action: clossing_listening_socket | result: success")
                 return
-            logging.error("action: receive_message | result: fail | error: {e}")
+            logging.error("action: accept_connections | result: fail | error: {e}")
 
         return 
