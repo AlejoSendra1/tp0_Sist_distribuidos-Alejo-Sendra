@@ -110,6 +110,11 @@ func main() {
 		LoopPeriod:    v.GetDuration("loop.period"),
 	}
 
-	client := common.NewClient(clientConfig)
+	clientBetData, DataErr := common.GetBetDataFromEnv()
+	if DataErr != nil {
+		log.Criticalf("%s", err)
+	}
+
+	client := common.NewClient(clientConfig, *clientBetData)
 	client.StartClientLoop()
 }
