@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common"
+	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
 )
 
 var log = logging.MustGetLogger("log")
@@ -110,7 +111,7 @@ func main() {
 		LoopPeriod:    v.GetDuration("loop.period"),
 	}
 
-	clientBetData, DataErr := common.GetBetDataFromEnv()
+	clientBetData, DataErr := domain.GetBetDataFromEnv()
 	if DataErr != nil {
 		log.Criticalf("%s", err)
 	}

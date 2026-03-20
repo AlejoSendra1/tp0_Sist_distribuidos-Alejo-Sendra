@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
 	"github.com/op/go-logging"
 )
 
@@ -25,14 +26,14 @@ type ClientConfig struct {
 // Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
-	betData BetData
+	betData domain.BetData
 	conn   net.Conn
 	signalChannel chan os.Signal
 }
 
 // NewClient Initializes a new client receiving the configuration
 // as a parameter
-func NewClient(config ClientConfig, clientBetData BetData) *Client {
+func NewClient(config ClientConfig, clientBetData domain.BetData) *Client {
 
 	channel:= make(chan os.Signal, 1)
 	signal.Notify(channel, syscall.SIGTERM, os.Interrupt)
