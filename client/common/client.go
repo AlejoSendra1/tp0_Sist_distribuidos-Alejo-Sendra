@@ -2,13 +2,13 @@ package common
 
 import (
 	"bufio"
-	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/communication"
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
 	"github.com/op/go-logging"
 )
@@ -43,7 +43,6 @@ func NewClient(config ClientConfig, clientBetData domain.BetData) *Client {
 		betData: clientBetData,
 		signalChannel: channel,
 	}
-
 	return client
 }
 
@@ -68,7 +67,7 @@ func (c *Client) StartClientLoop() {
 
 	//betSerialization := serialization.serializeBet(c.bet)
 
-	// Create the connection the server
+	// Create the connection to the server
 	c.createClientSocket()
 
 	// TODO: Modify the send to avoid short-write
@@ -77,10 +76,14 @@ func (c *Client) StartClientLoop() {
 		c.betData.BetNumber,
 		c.config.ID,
 	)
-	fmt.Fprintf(
-		c.conn,
-		"", // aca enviar bytess/serializacion 
-	)
+
+	serialized := communication.SerializeBetData(&c.betData)
+	_, err := c.conn.Write(serialized)
+	if err != nil {
+		log.Errorf("action: send_bet | result: fail | client_id: %v | error: %v", c.config.ID, err)
+		return
+	}
+
 	serverAnswer, err := bufio.NewReader(c.conn).ReadString('\n')
 	
 	c.conn.Close()
