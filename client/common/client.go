@@ -1,8 +1,6 @@
 package common
 
 import (
-	"bufio"
-	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,20 +13,20 @@ import (
 
 var log = logging.MustGetLogger("log")
 
+// Client Entity that encapsulates how
+type Client struct {
+	config ClientConfig
+	betData domain.BetData
+	socket communication.AgencySocket
+	signalChannel chan os.Signal
+}
+
 // ClientConfig Configuration used by the client
 type ClientConfig struct {
 	ID            string
 	ServerAddress string
 	LoopAmount    int
 	LoopPeriod    time.Duration
-}
-
-// Client Entity that encapsulates how
-type Client struct {
-	config ClientConfig
-	betData domain.BetData
-	conn   net.Conn
-	signalChannel chan os.Signal
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -43,79 +41,41 @@ func NewClient(config ClientConfig, clientBetData domain.BetData) *Client {
 		betData: clientBetData,
 		signalChannel: channel,
 	}
+
 	return client
 }
 
-// CreateClientSocket Initializes client socket. In case of
-// failure, error is printed in stdout/stderr and exit 1
-// is returned
-func (c *Client) createClientSocket() error {
-	conn, err := net.Dial("tcp", c.config.ServerAddress)
-	if err != nil {
-		log.Criticalf(
-			"action: connect | result: fail | client_id: %v | error: %v",
-			c.config.ID,
-			err,
-		)
-	}
-	c.conn = conn
-	return nil
-}
 
 // StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClientLoop() {
-
-	//betSerialization := serialization.serializeBet(c.bet)
+func (c *Client) StartClient() {
 
 	// Create the connection to the server
-	c.createClientSocket()
+	agencySocket:= communication.CreateAgencySocket(c.config.ServerAddress,c.config.ID)
 
-	// TODO: Modify the send to avoid short-write
 	log.Infof("action: apuesta_enviada | result: in_progress | dni: %v | numero: %v | agency: %v",
 		c.betData.Document,
 		c.betData.BetNumber,
 		c.config.ID,
 	)
 
-	serialized := communication.SerializeBetData(&c.betData)
-	_, err := c.conn.Write(serialized)
+	result, err := agencySocket.SendBet(&c.betData,c.config.ID) 
 	if err != nil {
-		log.Errorf("action: send_bet | result: fail | client_id: %v | error: %v", c.config.ID, err)
-		return
-	}
-
-	serverAnswer, err := bufio.NewReader(c.conn).ReadString('\n')
-	
-	c.conn.Close()
-	log.Infof("action: socket_closed | result: success | client_id: %v",
-		c.config.ID,
-	)
-
-	if err != nil {
-		log.Errorf("action: receive_message | result: fail | client_id: %v | error: %v",
-			c.config.ID,
-			err,
-		)
-		return
-	} else {
-		log.Infof("action: msg_recivido del server %s",
-			serverAnswer,
-		)
+		log.Criticalf("%s", err)
 	}
 
 	log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v | agency: %v",
 		c.betData.Document,
 		c.betData.BetNumber,
 		c.config.ID,
-	)
+	) 
 
+	log.Infof("Server answered with: %v", result)
+	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID) // Eliminar luego de probar si pasan los tests --------------
+	
 	select {
 		case <-c.signalChannel:
 			log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
 			log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
 		return
-		case <-time.After(c.config.LoopPeriod):
-	}
-
-	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+	}	
 }
