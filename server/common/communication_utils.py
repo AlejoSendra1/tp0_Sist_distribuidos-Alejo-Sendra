@@ -2,7 +2,7 @@ from datetime import date
 import logging
 import struct
 
-from server.common.betData import BetData
+from server.common.utils import Bet
 
 
 class Client_bet_socket:
@@ -17,25 +17,28 @@ class Client_bet_socket:
         If a problem arises in the communication with the client, the
         client socket will also be closed
         """
+        addr = self.socket.getpeername()
+
         try:
-            # TODO: Modify the receive to avoid short-reads
             bet = self.get_client_bet()
-            addr = self.socket.getpeername()
-            logging.info(f'action: receive_message | result: success | ip: {addr[0]} | msg: {msg}')
-            # TODO: Modify the send to avoid short-writes
             self.socket.send("{}\n".format("Ok").encode('utf-8'))
+
         except OSError as e:
             if self.is_shutting_down:
                 return
             logging.error("action: receive_message | result: fail | error: {e}")
+
+        except Exception as err:
+            self.socket.send("{}\n".format("Error:{err}").encode('utf-8'))
         finally:
             self.socket.close()
-            logging.info(f'action: clossing_client_socket | result: success | ip: addr[0]')
+            logging.info(f'action: clossing_client_socket | result: success | ip: {addr[0]}')
         
         return bet
 
+
     def recv_exact(self, n: int):
-        """Read exactly n bytes from socket, handling partial reads."""
+        """Reads exactly n bytes from the socket"""
         data = b''
         while len(data) < n:
             chunk = self.sock.recv(n - len(data))
@@ -45,28 +48,24 @@ class Client_bet_socket:
         return data
 
 
-    def deserialize_bet_data_from_socket(self):
-        # Agency (1 byte)
+    def get_client_bet(self):
         agency = struct.unpack('>B', self.recv_exact(1))[0]
 
-        # Document (4 bytes)
         document = struct.unpack('>I', self.recv_exact(4))[0]
 
-        # BetNumber (8 bytes)
         bet_number = struct.unpack('>Q', self.recv_exact(8))[0]
 
-        # Birthdate (2 + 1 + 1 bytes)
         year  = struct.unpack('>H', self.recv_exact(2))[0]
         month = struct.unpack('>B', self.recv_exact(1))[0]
         day   = struct.unpack('>B', self.recv_exact(1))[0]
-        birthdate = date(year, month, day)
 
-        # FirstName (1 byte length + N bytes)
         first_name_len = struct.unpack('>B', self.recv_exact(1))[0]
-        first_name = self.recv_exact(first_name_len).decode('utf-8')
+        first_name_chunks = self.recv_exact(first_name_len)
 
-        # LastName (1 byte length + N bytes)
         last_name_len = struct.unpack('>B', self.recv_exact(1))[0]
-        last_name = self.recv_exact(last_name_len).decode('utf-8')
+        last_name_chunks = self.recv_exact(last_name_len)
 
-        return BetData(agency,document,bet_number,birthdate,first_name,last_name)
+        first_name = first_name_chunks.decode('utf-8')
+        last_name = last_name_chunks.decode('utf-8')
+        birthdate = date(year, month, day)
+        return Bet(agency,first_name,last_name,document,birthdate,bet_number)

@@ -52,10 +52,9 @@ func (c *Client) StartClient() {
 	// Create the connection to the server
 	agencySocket:= communication.CreateAgencySocket(c.config.ServerAddress,c.config.ID)
 
-	log.Infof("action: apuesta_enviada | result: in_progress | dni: %v | numero: %v | agency: %v",
+	log.Infof("action: apuesta_enviada | result: in_progress | dni: %v | numero: %v",
 		c.betData.Document,
 		c.betData.BetNumber,
-		c.config.ID,
 	)
 
 	result, err := agencySocket.SendBet(&c.betData,c.config.ID) 
@@ -63,10 +62,9 @@ func (c *Client) StartClient() {
 		log.Criticalf("%s", err)
 	}
 
-	log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v | agency: %v",
+	log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
 		c.betData.Document,
 		c.betData.BetNumber,
-		c.config.ID,
 	) 
 
 	log.Infof("Server answered with: %v", result)
