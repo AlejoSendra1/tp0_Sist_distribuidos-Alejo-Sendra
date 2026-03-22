@@ -116,6 +116,6 @@ func main() {
 		log.Criticalf("%s", err)
 	}
 
-	client := common.NewClient(clientConfig, *clientBetData)
+	client := common.NewClient(clientConfig, &clientBetData)
 	client.StartClient()
 }
