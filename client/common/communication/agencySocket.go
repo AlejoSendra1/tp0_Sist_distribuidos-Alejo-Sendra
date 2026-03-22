@@ -6,7 +6,7 @@ import (
 	"net"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
-	"github.com/7574-sistemas-distribuidos/docker-compose-init/vendor/github.com/op/go-logging"
+	"github.com/op/go-logging"
 )
 
 type AgencySocket struct {

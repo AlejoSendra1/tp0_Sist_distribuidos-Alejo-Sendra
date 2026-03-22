@@ -83,6 +83,8 @@ class Client_bet_socket:
         while sent < len(message):
             bytes_sent =  self.socket.send(message[sent:])
             sent += bytes_sent
+
+        
         
 
 
