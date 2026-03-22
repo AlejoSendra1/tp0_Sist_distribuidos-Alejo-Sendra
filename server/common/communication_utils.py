@@ -10,7 +10,7 @@ class Client_bet_socket:
         # Initialize server socket
         self.socket = socket
 
-    def handle_client_connection(self):
+    def handle_client_connection(self) -> Bet:
         """
         Read message from a specific client socket and closes the socket
 
@@ -21,7 +21,7 @@ class Client_bet_socket:
 
         try:
             bet = self.get_client_bet()
-            self.socket.send("{}\n".format("Ok").encode('utf-8'))
+            self.send("Ok")
 
         except OSError as e:
             if self.is_shutting_down:
@@ -29,7 +29,7 @@ class Client_bet_socket:
             logging.error("action: receive_message | result: fail | error: {e}")
 
         except Exception as err:
-            self.socket.send("{}\n".format("Error:{err}").encode('utf-8'))
+            self.send("{}\n".format("Error: {err}").encode('utf-8'))
         finally:
             self.socket.close()
             logging.info(f'action: clossing_client_socket | result: success | ip: {addr[0]}')
@@ -37,18 +37,21 @@ class Client_bet_socket:
         return bet
 
 
-    def recv_exact(self, n: int):
+    def recv_exact(self, n: int) -> int:
         """Reads exactly n bytes from the socket"""
-        data = b''
-        while len(data) < n:
-            chunk = self.sock.recv(n - len(data))
+        readed = b''
+        while len(readed) < n:
+            chunk = self.sock.recv(n - len(readed))
             if not chunk:
                 raise ConnectionError(f"Socket closed before reading {n} bytes")
-            data += chunk
-        return data
+            readed += chunk
+        return readed
 
 
-    def get_client_bet(self):
+    def get_client_bet(self) -> Bet:
+        """Reads from the socket every one of the fields of the Bet Object
+        respecting the protocol"""
+        
         agency = struct.unpack('>B', self.recv_exact(1))[0]
 
         document = struct.unpack('>I', self.recv_exact(4))[0]
@@ -69,3 +72,17 @@ class Client_bet_socket:
         last_name = last_name_chunks.decode('utf-8')
         birthdate = date(year, month, day)
         return Bet(agency,first_name,last_name,document,birthdate,bet_number)
+    
+    def send(self,content: str):
+        content_chunk = content.encode('utf-8')
+        body_size = len(content_chunk).to_bytes(1)
+
+        message = body_size + content_chunk
+
+        sent = 0
+        while sent < len(message):
+            bytes_sent =  self.socket.send(message[sent:])
+            sent += bytes_sent
+        
+
+

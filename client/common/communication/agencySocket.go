@@ -38,7 +38,7 @@ func CreateAgencySocket(serverAddr string, id string) *AgencySocket {
 func (as *AgencySocket) SendBet(betData *domain.BetData, id string) (string,error) {
 	serialized := SerializeBetData(betData)
 
-	err := as.WriteExact(serialized,len(serialized))
+	err := as.Write(serialized)
 	if err != nil {
 		log.Errorf("action: send_bet | result: fail | client_id: %v | error: %v", id, err)
 		return "", err
@@ -62,10 +62,10 @@ func (as *AgencySocket) SendBet(betData *domain.BetData, id string) (string,erro
 	return servResponse, nil
 }
 
-func (as *AgencySocket) WriteExact(content []byte, bytesToWrite int) error {
+func (as *AgencySocket) WriteExact(content []byte) error {
 	bytesWritten := 0
-	for bytesWritten < bytesToWrite {
-		bytesWrittenNow, err := as.conn.Write(content)
+	for bytesWritten < len(content) {
+		bytesWrittenNow, err := as.conn.Write(content[bytesWritten:])
 		bytesWritten += bytesWrittenNow
 		if err != nil {
 			return err
