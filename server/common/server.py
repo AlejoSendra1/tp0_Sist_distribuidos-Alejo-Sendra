@@ -2,8 +2,8 @@ import socket
 import signal
 import logging
 
-from server.common.communication_utils import Client_bet_socket
-from server.common.utils import store_bets
+from common.communication_utils import Client_bet_socket
+from common.utils import store_bets
 
 
 class Server:
@@ -56,12 +56,15 @@ class Server:
                 break
             
             client_bet_socket = Client_bet_socket(new_client_socket)
-            client_bet = client_bet_socket.handle_client_connection()  # obtener la apuesta
-            
-            store_bets([client_bet])
-            logging.info(f'action: apuesta_almacenada | result: success | dni: ${client_bet.document} | numero: ${client_bet.number}')
-            
+            client_bet = client_bet_socket.handle_client_connection()
 
+            logging.info(f'La apuesta recibida fue: {client_bet}')
+            
+            if client_bet is not None: 
+                store_bets([client_bet])
+                logging.info(f'action: apuesta_almacenada | result: success | dni: ${client_bet.document} | numero: ${client_bet.number}')
+            logging.info(f'action: apuesta_almacenada | result: fail')
+            
         self.gracefull_shutdown()
     
     def __accept_new_connection(self):

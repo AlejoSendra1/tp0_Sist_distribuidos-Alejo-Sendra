@@ -57,9 +57,10 @@ func (c *Client) StartClient() {
 		c.betData.BetNumber,
 	)
 
-	result, err := agencySocket.SendBet(&c.betData,c.config.ID) 
+	result, err := agencySocket.SendBet(c.betData,c.config.ID) 
 	if err != nil {
 		log.Criticalf("%s", err)
+		return
 	}
 
 	log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",

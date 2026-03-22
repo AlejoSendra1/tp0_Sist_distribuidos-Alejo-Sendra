@@ -111,11 +111,14 @@ func main() {
 		LoopPeriod:    v.GetDuration("loop.period"),
 	}
 
+	log.Infof("action: get_data_from_env | result: in_progress")
 	clientBetData, DataErr := domain.GetBetDataFromEnv()
 	if DataErr != nil {
-		log.Criticalf("%s", err)
+		log.Criticalf("%v", err)
+		return
 	}
+	log.Infof("action: get_data_from_env | result: success")
 
-	client := common.NewClient(clientConfig, &clientBetData)
+	client := common.NewClient(clientConfig, clientBetData)
 	client.StartClient()
 }
