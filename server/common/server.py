@@ -2,7 +2,7 @@ import socket
 import signal
 import logging
 
-from server.common.client_bet_socket import Client_bet_socket
+from common.client_bet_socket import Client_bet_socket
 from common.utils import store_bets
 
 
@@ -63,7 +63,8 @@ class Server:
             if client_bet is not None: 
                 store_bets([client_bet])
                 logging.info(f'action: apuesta_almacenada | result: success | dni: {client_bet.document} | numero: {client_bet.number}')
-            logging.info(f'action: apuesta_almacenada | result: fail')
+            else:
+                logging.info(f'action: apuesta_almacenada | result: fail')
             
         self.gracefull_shutdown()
     
