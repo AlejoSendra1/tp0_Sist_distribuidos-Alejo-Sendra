@@ -11,6 +11,8 @@ const (
 	LAST_NAME_MAX_SIZE = 64
 )
 
+// Serilize the given BetData Struct to be send to the server
+// based on the defined protocol
 func SerializeBetData(betData *domain.BetData) []byte {
 	
     // in case the names exceed the wanted size they will be cut

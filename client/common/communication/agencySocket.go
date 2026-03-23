@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"github.com/op/go-logging"
-	
+
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
 )
 
@@ -43,9 +43,11 @@ func CreateAgencySocket(serverAddr string, id string) (*AgencySocket, error) {
 }
 
 func (as *AgencySocket) SendBet(betData domain.BetData, id string) (string,error) {
+	// Sends the given BetData to the server and returns the server response 
+	// in case communication is successfull
 	serialized := SerializeBetData(&betData)
 
-	err := as.WriteExact(serialized)
+	err := as.writeExact(serialized)
 	if err != nil {
 		log.Criticalf("action: send_bet | result: fail | client_id: %v | error: %v", id, err)
 		return "", err
@@ -69,7 +71,8 @@ func (as *AgencySocket) SendBet(betData domain.BetData, id string) (string,error
 	return servResponse, nil
 }
 
-func (as *AgencySocket) WriteExact(content []byte) error {
+func (as *AgencySocket) writeExact(content []byte) error {
+	// Writes exactly the content given in the socket
 	bytesWritten := 0
 	for bytesWritten < len(content) {
 		bytesWrittenNow, err := as.conn.Write(content[bytesWritten:])
@@ -85,7 +88,9 @@ func (as *AgencySocket) WriteExact(content []byte) error {
 	return nil
 }
 
-func readExact(conn net.Conn, n int) ([]byte, error) {
+func recvExact(conn net.Conn, n int) ([]byte, error) {
+	//  reads exactly n bytes from the socket
+	//  and returns the array of bytes read and an error if fewer bytes were read
     buf := make([]byte, n)
     _, err := io.ReadFull(conn, buf)
     if err != nil {
@@ -96,12 +101,13 @@ func readExact(conn net.Conn, n int) ([]byte, error) {
 }
 
 func (as *AgencySocket) GetServerResponse() (string,error) {
-	responseLen , err := readExact(as.conn, 1)
+	// Wait for the server response and return its answer in case of success
+	responseLen , err := recvExact(as.conn, 1)
 	if err != nil {
 		return "",err
 	}
 	
-	serverAnswer , err := readExact(as.conn, int(uint8(responseLen[0])))
+	serverAnswer , err := recvExact(as.conn, int(uint8(responseLen[0])))
 	if err != nil {
 		return "",err
 	}

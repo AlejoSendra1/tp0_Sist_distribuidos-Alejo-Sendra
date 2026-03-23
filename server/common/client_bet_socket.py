@@ -6,23 +6,20 @@ from common.utils import Bet
 
 
 class Client_bet_socket:
-    def __init__(self, socket):
-        # Initialize server socket
-        self.socket = socket
+    def __init__(self, sockett):
+        self.socket = sockett
 
     def handle_client_connection(self) -> Bet:
         """
         Read message from a specific client socket and closes the socket
-
         If a problem arises in the communication with the client, the
-        client socket will also be closed
-        """
+        client socket will also be closed """
         addr = self.socket.getpeername()
         bet = None
 
         try:
             bet = self.get_client_bet()
-            self.send("Ok")
+            self.send_response("Ok")
 
         except OSError as e:
             if self.is_shutting_down:
@@ -30,7 +27,7 @@ class Client_bet_socket:
             logging.error("action: receive_message | result: fail | error: {e}")
 
         except Exception as err:
-            self.send(f'Error: {err}')
+            self.send_response(f'Error: {err}')
             return
         finally:
             self.socket.close()
@@ -52,7 +49,7 @@ class Client_bet_socket:
 
     def get_client_bet(self) -> Bet:
         """Reads from the socket every one of the fields of the Bet Object
-        respecting the protocol"""
+        respecting the protocol and return them as a Bet object"""
         
         agency = struct.unpack('>B', self.recv_exact(1))[0]
         logging.info(f'agencia: {agency}')
@@ -81,12 +78,12 @@ class Client_bet_socket:
         birthdate = date(year, month, day).isoformat()
         return Bet(agency,first_name,last_name,document,birthdate,bet_number)
     
-    def send(self,content: str):
+    def send_response(self,content: str):
+        """Writes exactly the content given in the socket"""
+
         content_chunk = content.encode('utf-8')
         body_size = len(content_chunk).to_bytes(1,'big')
-
         message = body_size + content_chunk
-
         sent = 0
         while sent < len(message):
             bytes_sent =  self.socket.send(message[sent:])

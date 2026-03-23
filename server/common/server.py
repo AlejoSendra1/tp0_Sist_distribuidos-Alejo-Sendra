@@ -2,7 +2,7 @@ import socket
 import signal
 import logging
 
-from common.communication_utils import Client_bet_socket
+from server.common.client_bet_socket import Client_bet_socket
 from common.utils import store_bets
 
 
@@ -74,7 +74,6 @@ class Server:
         Function blocks until a connection to a client is made.
         Then connection created is printed and returned
         """
-
         # Connection arrived
         logging.info('action: accept_connections | result: in_progress')
 
