@@ -52,5 +52,3 @@ func SerializeBetData(betData *domain.BetData) []byte {
 
     return bytesToSend
 }
-
-//el inverso al de arriba

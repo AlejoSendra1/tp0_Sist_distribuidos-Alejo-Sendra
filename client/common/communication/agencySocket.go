@@ -18,7 +18,7 @@ var log = logging.MustGetLogger("log")
 // CreateClientSocket Initializes client socket. In case of
 // failure, error is printed in stdout/stderr and exit 1
 // is returned
-func CreateAgencySocket(serverAddr string, id string) *AgencySocket {
+func CreateAgencySocket(serverAddr string, id string) AgencySocket {
 	conn, err := net.Dial("tcp", serverAddr)
 
 	if err != nil {
@@ -27,9 +27,10 @@ func CreateAgencySocket(serverAddr string, id string) *AgencySocket {
 			id,
 			err,
 		)
+		return nil
 	}
 	
-	agencySocket := &AgencySocket{
+	agencySocket := AgencySocket{
 		conn: conn,
 	}
 
@@ -71,20 +72,15 @@ func (as *AgencySocket) SendBet(betData domain.BetData, id string) (string,error
 func (as *AgencySocket) WriteExact(content []byte) error {
 	bytesWritten := 0
 	for bytesWritten < len(content) {
-		//
-		log.Infof("el socket es null %v", as)
-		log.Infof("el socket es null %v", as.conn)
-		log.Infof("action se mando: %s | contenido a enviar: %s | cantidad de bytes a enviar: %v",
-			content[bytesWritten:],
-			content,
-			len(content),
-		)
-		//
 		bytesWrittenNow, err := as.conn.Write(content[bytesWritten:])
 		bytesWritten += bytesWrittenNow
 		if err != nil {
 			return err
 		}
+		log.Infof("action: sent | result: success | content: %v | amount_of_bytes: %v",
+			content[bytesWritten:],
+			len(content),
+		)
 	}
 	return nil
 }
