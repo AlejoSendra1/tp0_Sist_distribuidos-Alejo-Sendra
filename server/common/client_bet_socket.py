@@ -50,36 +50,29 @@ class Client_bet_socket:
         """ el primer byte/bytes corresponderan a la cantidad de bets a leer"""
         bets = []
         
-        bets_amount = struct.unpack('>B', self.recv_exact(1))[0]
-        logging.info(f'Must read: {bets_amount} bets')
+        bytes_to_read = struct.unpack('>H', self.recv_exact(2))[0]
+        agency = struct.unpack('>B', self.recv_exact(1))[0]
+        logging.info(f'Must read: {bytes_to_read} bets from agency: {agency}')
 
-        for i in range(0, bets_amount):
+        read_bytes = 0
+        while read_bytes < bytes_to_read:
             try: 
-                bets.append(self.get_client_bet())
+                bets.append(self.get_client_bet(), agency)
             except:
                 logging.info(f'Error reading a bet')
         
 
-
-
-
-    def get_client_bet(self) -> Bet:
+    def get_client_bet(self, agency: int) -> Bet:
         """Reads from the socket every one of the fields of the Bet Object
         respecting the protocol and return them as a Bet object"""
-        
-        agency = struct.unpack('>B', self.recv_exact(1))[0]
-        logging.info(f'agencia: {agency}')
 
         document = struct.unpack('>I', self.recv_exact(4))[0]
-        logging.info(f'document: {document}')
 
         bet_number = struct.unpack('>Q', self.recv_exact(8))[0]
-        logging.info(f'bet_number: {bet_number}')
 
         year  = struct.unpack('>H', self.recv_exact(2))[0]
         month = struct.unpack('>B', self.recv_exact(1))[0]
         day   = struct.unpack('>B', self.recv_exact(1))[0]
-        logging.info(f'year: {year}, month: {month}, day: {day}')
 
         first_name_len = struct.unpack('>B', self.recv_exact(1))[0]
         first_name_chunks = self.recv_exact(first_name_len)
@@ -88,9 +81,7 @@ class Client_bet_socket:
         last_name_chunks = self.recv_exact(last_name_len)
 
         first_name = first_name_chunks.decode('utf-8')
-        logging.info(f'first_name: {first_name}')
         last_name = last_name_chunks.decode('utf-8')
-        logging.info(f'last_name: {last_name}')
         birthdate = date(year, month, day).isoformat()
         return Bet(agency,first_name,last_name,document,birthdate,bet_number)
     

@@ -11,6 +11,7 @@ import (
 
 type AgencySocket struct {
 	conn   net.Conn
+	id string
 }
 
 var log = logging.MustGetLogger("log")
@@ -32,6 +33,7 @@ func CreateAgencySocket(serverAddr string, id string) (*AgencySocket, error) {
 	
 	agencySocket := &AgencySocket{
 		conn: conn,
+		id: id,
 	}
 
 	log.Infof(
@@ -42,33 +44,46 @@ func CreateAgencySocket(serverAddr string, id string) (*AgencySocket, error) {
 	return agencySocket, nil
 }
 
-func (as *AgencySocket) SendBet(betData domain.Bet, id string) (string,error) {
+
+
+func (as *AgencySocket) SendBets(bets []domain.Bet, id string) (string,error) {
 	// Sends the given Bet to the server and returns the server response 
 	// in case communication is successfull
-	serialized := SerializeBet(&betData)
+	betsSent := 0 
 
-	err := as.writeExact(serialized)
-	if err != nil {
-		log.Criticalf("action: send_bet | result: fail | client_id: %v | error: %v", id, err)
-		return "", err
-	}
+	for betsSent < len(bets) {
+		serialized, amount := createBatch(bets, betsSent, id)
 
-	servResponse, err := as.GetServerResponse()
+		err := as.writeExact(serialized)
+		if err != nil {
+			log.Criticalf("action: send_bet | result: fail | client_id: %v | error: %v", id, err)
+			return "", err
+		}
 
-	as.conn.Close()
-	log.Infof("action: socket_closed | result: success | client_id: %v",
+		servResponse, err := as.GetServerResponse()
+
+		betsSent += amount
+		
+		log.Infof("action: socket_closed | result: success | client_id: %v",
 		id,
-	)
-
-	if err != nil {
-		log.Criticalf("action: receive_message | result: fail | client_id: %v | error: %v",
+		)
+	
+		if err != nil {
+			log.Criticalf("action: receive_message | result: fail | client_id: %v | error: %v",
 			id,
 			err,
 		)
 		return "", err
-	} 
+		} else {
+			log.Infof("action: server_response | result: success | answer: %v",
+			servResponse,
+			)
+		}
+	}
 
-	return servResponse, nil
+	as.conn.Close()
+
+	return "Ok",nil
 }
 
 func (as *AgencySocket) writeExact(content []byte) error {

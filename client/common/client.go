@@ -16,7 +16,6 @@ var log = logging.MustGetLogger("log")
 // Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
-	betData domain.Bet
 	socket communication.AgencySocket
 	signalChannel chan os.Signal
 }
@@ -31,14 +30,13 @@ type ClientConfig struct {
 
 // NewClient Initializes a new client receiving the configuration
 // as a parameter
-func NewClient(config ClientConfig, clientBet domain.Bet) *Client {
+func NewClient(config ClientConfig) *Client {
 
 	channel:= make(chan os.Signal, 1)
 	signal.Notify(channel, syscall.SIGTERM, os.Interrupt)
 
 	client := &Client{
 		config: config,
-		betData: clientBet,
 		signalChannel: channel,
 	}
 
@@ -47,7 +45,7 @@ func NewClient(config ClientConfig, clientBet domain.Bet) *Client {
 
 
 // StartClient Send messages to the client until some time threshold is met
-func (c *Client) StartClient() error {
+func (c *Client) StartClient(bets []domain.Bet) error {
 
 	// Create the connection to the server
 	agencySocket, err:= communication.CreateAgencySocket(c.config.ServerAddress,c.config.ID)
@@ -56,21 +54,15 @@ func (c *Client) StartClient() error {
 		return err
 	}
 
-	log.Infof("action: apuesta_enviada | result: in_progress | dni: %v | numero: %v",
-		c.betData.Document,
-		c.betData.BetNumber,
-	)
+	log.Infof("action: apuestas_enviadas | result: in_progress")
 
-	result, err := agencySocket.SendBet(c.betData,c.config.ID) 
+	result, err := agencySocket.SendBets(bets,c.config.ID) 
 	if err != nil {
 		log.Criticalf("%s", err)
 		return err
 	}
 
-	log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
-		c.betData.Document,
-		c.betData.BetNumber,
-	) 
+	log.Infof("action: apuestas_enviadas | result: success ")
 
 	log.Infof("Server answered with: %v", result)
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID) // Eliminar luego de probar si pasan los tests --------------

@@ -11,7 +11,6 @@ import (
 
 func TestSerialize_CorrectLayout(t *testing.T) {
 	bet := &domain.Bet{
-		Agency:    3,
 		FirstName: "John",
 		LastName:  "Doe",
 		Document:  12345678,
@@ -22,12 +21,6 @@ func TestSerialize_CorrectLayout(t *testing.T) {
 	result := communication.SerializeBet(bet)
 
 	offset := 0
-
-	// Agency (1 byte)
-	if result[offset] != 3 {
-		t.Errorf("Agency: expected 3, got %d", result[offset])
-	}
-	offset += 1
 
 	// Document (4 bytes)
 	doc := binary.BigEndian.Uint32(result[offset : offset+4])
@@ -86,7 +79,6 @@ func TestSerialize_CorrectLayout(t *testing.T) {
 
 func TestSerialize_CorrectTotalLength(t *testing.T) {
 	bet := &domain.Bet{
-		Agency:    1,
 		FirstName: "John",
 		LastName:  "Doe",
 		Document:  1,
@@ -96,8 +88,8 @@ func TestSerialize_CorrectTotalLength(t *testing.T) {
 
 	result := communication.SerializeBet(bet)
 
-	// 1 + 4 + 8 + 2 + 1 + 1 + 1 + len("John") + 1 + len("Doe")
-	expectedLen := 1 + 4 + 8 + 2 + 1 + 1 + 1 + len("John") + 1 + len("Doe")
+	// 4 + 8 + 2 + 1 + 1 + 1 + len("John") + 1 + len("Doe")
+	expectedLen := 4 + 8 + 2 + 1 + 1 + 1 + len("John") + 1 + len("Doe")
 	if len(result) != expectedLen {
 		t.Errorf("Total length: expected %d, got %d", expectedLen, len(result))
 	}
@@ -106,7 +98,6 @@ func TestSerialize_CorrectTotalLength(t *testing.T) {
 func TestSerialize_NamesAreTrimmedAtMaxSize(t *testing.T) {
 	longName := string(make([]byte, communication.FIRST_NAME_MAX_SIZE+10))
 	bet := &domain.Bet{
-		Agency:    1,
 		FirstName: longName,
 		LastName:  longName,
 		Document:  1,
@@ -116,8 +107,8 @@ func TestSerialize_NamesAreTrimmedAtMaxSize(t *testing.T) {
 
 	result := communication.SerializeBet(bet)
 
-	// jump fixed fields: 1 + 4 + 8 + 2 + 1 + 1 = 17
-	offset := 17
+	// jump fixed fields: 4 + 8 + 2 + 1 + 1 = 16
+	offset := 16
 	firstNameLen := int(result[offset])
 	if firstNameLen != communication.FIRST_NAME_MAX_SIZE {
 		t.Errorf("FirstName should be trimmed to %d, got %d", communication.FIRST_NAME_MAX_SIZE, firstNameLen)
@@ -132,7 +123,6 @@ func TestSerialize_NamesAreTrimmedAtMaxSize(t *testing.T) {
 
 func TestSerialize_EmptyNames(t *testing.T) {
 	bet := &domain.Bet{
-		Agency:    1,
 		FirstName: "",
 		LastName:  "",
 		Document:  1,
@@ -143,7 +133,7 @@ func TestSerialize_EmptyNames(t *testing.T) {
 	result := communication.SerializeBet(bet)
 
 	// jump fixed fields
-	offset := 17
+	offset := 16
 	if result[offset] != 0 {
 		t.Errorf("FirstName length should be 0, got %d", result[offset])
 	}

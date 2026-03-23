@@ -2,6 +2,7 @@ package communication
 
 import (
 	"encoding/binary"
+	"strconv"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
 )
@@ -9,6 +10,7 @@ import (
 const (
 	FIRST_NAME_MAX_SIZE = 64
 	LAST_NAME_MAX_SIZE = 64
+    HEADER_SIZE = 3 // 2 B for the packet size + 1 B for the agency number
 )
 
 // Serilize the given Bet Struct to be send to the server
@@ -24,7 +26,6 @@ func SerializeBet(betData *domain.Bet) []byte {
 	}
 	
     var bytesToSend []byte
-    bytesToSend = append(bytesToSend, byte(betData.Agency))
 
     tmp_buff := make([]byte, 4)
     binary.BigEndian.PutUint32(tmp_buff, betData.Document)
@@ -53,4 +54,21 @@ func SerializeBet(betData *domain.Bet) []byte {
     }
 
     return bytesToSend
+}
+
+func createBatch(bets []domain.Bet, betsOffset int, agencyNum string) ([]byte, int) {
+    var batch []byte
+    
+    for (len(batch) + bets[betsOffset].BytesSize() < 8000 - HEADER_SIZE) && len(bets) > betsOffset { // luego tomar de entorno
+        betSerialization := SerializeBet(&bets[betsOffset])
+        batch = append(batch, betSerialization...)
+        betsOffset += 1
+    }
+
+    header := make([]byte, HEADER_SIZE)
+    binary.BigEndian.PutUint16(header[0:2], uint16(len(batch)))
+    agencyNumAsInt, _ := strconv.Atoi(agencyNum)
+    header = append(header, byte(agencyNumAsInt))
+
+    return append(header, batch...), betsOffset
 }
