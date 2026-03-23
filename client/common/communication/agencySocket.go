@@ -18,7 +18,7 @@ var log = logging.MustGetLogger("log")
 // CreateClientSocket Initializes client socket. In case of
 // failure, error is printed in stdout/stderr and exit 1
 // is returned
-func CreateAgencySocket(serverAddr string, id string) AgencySocket {
+func CreateAgencySocket(serverAddr string, id string) (*AgencySocket, error) {
 	conn, err := net.Dial("tcp", serverAddr)
 
 	if err != nil {
@@ -27,10 +27,10 @@ func CreateAgencySocket(serverAddr string, id string) AgencySocket {
 			id,
 			err,
 		)
-		return nil
+		return &AgencySocket{}, err
 	}
 	
-	agencySocket := AgencySocket{
+	agencySocket := &AgencySocket{
 		conn: conn,
 	}
 
@@ -39,7 +39,7 @@ func CreateAgencySocket(serverAddr string, id string) AgencySocket {
 		id,
 	)
 
-	return agencySocket
+	return agencySocket, nil
 }
 
 func (as *AgencySocket) SendBet(betData domain.BetData, id string) (string,error) {

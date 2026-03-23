@@ -46,11 +46,15 @@ func NewClient(config ClientConfig, clientBetData domain.BetData) *Client {
 }
 
 
-// StartClientLoop Send messages to the client until some time threshold is met
-func (c *Client) StartClient() {
+// StartClient Send messages to the client until some time threshold is met
+func (c *Client) StartClient() error {
 
 	// Create the connection to the server
-	agencySocket:= communication.CreateAgencySocket(c.config.ServerAddress,c.config.ID)
+	agencySocket, err:= communication.CreateAgencySocket(c.config.ServerAddress,c.config.ID)
+	if err != nil {
+		log.Criticalf("%s", err)
+		return err
+	}
 
 	log.Infof("action: apuesta_enviada | result: in_progress | dni: %v | numero: %v",
 		c.betData.Document,
@@ -60,7 +64,7 @@ func (c *Client) StartClient() {
 	result, err := agencySocket.SendBet(c.betData,c.config.ID) 
 	if err != nil {
 		log.Criticalf("%s", err)
-		return
+		return err
 	}
 
 	log.Infof("action: apuesta_enviada | result: success | dni: %v | numero: %v",
@@ -75,6 +79,6 @@ func (c *Client) StartClient() {
 		case <-c.signalChannel:
 			log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
 			log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
-		return
+		return nil
 	}	
 }
