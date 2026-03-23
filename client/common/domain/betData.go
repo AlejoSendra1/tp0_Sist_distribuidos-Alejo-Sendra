@@ -13,7 +13,7 @@ var log = logging.MustGetLogger("log")
 
 
 // ClientPersonalData data from the client used to keep register of transactions
-type BetData struct {
+type Bet struct {
 	Agency uint8
 	Document  uint32
 	BetNumber uint64
@@ -22,10 +22,10 @@ type BetData struct {
 	LastName string
 }
 
-// Gets and validates all fields to create the client BetData
-func GetBetDataFromEnv() (BetData, error) {
+// Gets and validates all fields to create the client Bet
+func GetBetFromEnv() (Bet, error) {
 	var err error
-	data := BetData{}
+	data := Bet{}
 	
 	//CLI_ID / agency
 	agencyIDStr := os.Getenv("CLI_ID")

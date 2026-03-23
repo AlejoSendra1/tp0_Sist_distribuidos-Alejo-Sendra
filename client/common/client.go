@@ -16,7 +16,7 @@ var log = logging.MustGetLogger("log")
 // Client Entity that encapsulates how
 type Client struct {
 	config ClientConfig
-	betData domain.BetData
+	betData domain.Bet
 	socket communication.AgencySocket
 	signalChannel chan os.Signal
 }
@@ -31,14 +31,14 @@ type ClientConfig struct {
 
 // NewClient Initializes a new client receiving the configuration
 // as a parameter
-func NewClient(config ClientConfig, clientBetData domain.BetData) *Client {
+func NewClient(config ClientConfig, clientBet domain.Bet) *Client {
 
 	channel:= make(chan os.Signal, 1)
 	signal.Notify(channel, syscall.SIGTERM, os.Interrupt)
 
 	client := &Client{
 		config: config,
-		betData: clientBetData,
+		betData: clientBet,
 		signalChannel: channel,
 	}
 

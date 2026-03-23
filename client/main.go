@@ -112,13 +112,13 @@ func main() {
 	}
 
 	log.Infof("action: get_data_from_env | result: in_progress")
-	clientBetData, DataErr := domain.GetBetDataFromEnv()
+	clientBet, DataErr := domain.GetBetFromEnv()
 	if DataErr != nil {
 		log.Criticalf("%v", err)
 		return
 	}
 	log.Infof("action: get_data_from_env | result: success")
 
-	client := common.NewClient(clientConfig, clientBetData)
+	client := common.NewClient(clientConfig, clientBet)
 	client.StartClient()
 }

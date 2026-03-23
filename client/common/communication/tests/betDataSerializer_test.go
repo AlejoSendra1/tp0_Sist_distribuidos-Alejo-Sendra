@@ -10,7 +10,7 @@ import (
 )
 
 func TestSerialize_CorrectLayout(t *testing.T) {
-	bet := &domain.BetData{
+	bet := &domain.Bet{
 		Agency:    3,
 		FirstName: "John",
 		LastName:  "Doe",
@@ -19,7 +19,7 @@ func TestSerialize_CorrectLayout(t *testing.T) {
 		BetNumber: 9876543210,
 	}
 
-	result := communication.SerializeBetData(bet)
+	result := communication.SerializeBet(bet)
 
 	offset := 0
 
@@ -85,7 +85,7 @@ func TestSerialize_CorrectLayout(t *testing.T) {
 }
 
 func TestSerialize_CorrectTotalLength(t *testing.T) {
-	bet := &domain.BetData{
+	bet := &domain.Bet{
 		Agency:    1,
 		FirstName: "John",
 		LastName:  "Doe",
@@ -94,7 +94,7 @@ func TestSerialize_CorrectTotalLength(t *testing.T) {
 		BetNumber: 1,
 	}
 
-	result := communication.SerializeBetData(bet)
+	result := communication.SerializeBet(bet)
 
 	// 1 + 4 + 8 + 2 + 1 + 1 + 1 + len("John") + 1 + len("Doe")
 	expectedLen := 1 + 4 + 8 + 2 + 1 + 1 + 1 + len("John") + 1 + len("Doe")
@@ -105,7 +105,7 @@ func TestSerialize_CorrectTotalLength(t *testing.T) {
 
 func TestSerialize_NamesAreTrimmedAtMaxSize(t *testing.T) {
 	longName := string(make([]byte, communication.FIRST_NAME_MAX_SIZE+10))
-	bet := &domain.BetData{
+	bet := &domain.Bet{
 		Agency:    1,
 		FirstName: longName,
 		LastName:  longName,
@@ -114,7 +114,7 @@ func TestSerialize_NamesAreTrimmedAtMaxSize(t *testing.T) {
 		BetNumber: 1,
 	}
 
-	result := communication.SerializeBetData(bet)
+	result := communication.SerializeBet(bet)
 
 	// jump fixed fields: 1 + 4 + 8 + 2 + 1 + 1 = 17
 	offset := 17
@@ -131,7 +131,7 @@ func TestSerialize_NamesAreTrimmedAtMaxSize(t *testing.T) {
 }
 
 func TestSerialize_EmptyNames(t *testing.T) {
-	bet := &domain.BetData{
+	bet := &domain.Bet{
 		Agency:    1,
 		FirstName: "",
 		LastName:  "",
@@ -140,7 +140,7 @@ func TestSerialize_EmptyNames(t *testing.T) {
 		BetNumber: 1,
 	}
 
-	result := communication.SerializeBetData(bet)
+	result := communication.SerializeBet(bet)
 
 	// jump fixed fields
 	offset := 17

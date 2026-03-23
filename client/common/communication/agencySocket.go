@@ -42,10 +42,10 @@ func CreateAgencySocket(serverAddr string, id string) (*AgencySocket, error) {
 	return agencySocket, nil
 }
 
-func (as *AgencySocket) SendBet(betData domain.BetData, id string) (string,error) {
-	// Sends the given BetData to the server and returns the server response 
+func (as *AgencySocket) SendBet(betData domain.Bet, id string) (string,error) {
+	// Sends the given Bet to the server and returns the server response 
 	// in case communication is successfull
-	serialized := SerializeBetData(&betData)
+	serialized := SerializeBet(&betData)
 
 	err := as.writeExact(serialized)
 	if err != nil {
