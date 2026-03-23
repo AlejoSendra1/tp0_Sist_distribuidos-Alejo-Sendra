@@ -8,17 +8,17 @@ from common.utils import Bet
 class Client_bet_socket:
     def __init__(self, sockett):
         self.socket = sockett
-
-    def handle_client_connection(self) -> Bet:
-        """
-        Read message from a specific client socket and closes the socket
+    
+    def handle_client_connection(self) -> list:
+        """Read message from a specific client socket and closes the socket
         If a problem arises in the communication with the client, the
         client socket will also be closed """
+
         addr = self.socket.getpeername()
         bet = None
 
         try:
-            bet = self.get_client_bet()
+            bet = self.get_client_bets()
             self.send_response("Ok")
 
         except OSError as e:
@@ -45,6 +45,22 @@ class Client_bet_socket:
                 raise ConnectionError(f"Socket closed before reading {n} bytes")
             readed += chunk
         return readed
+
+    def get_client_bets(self) -> list:
+        """ el primer byte/bytes corresponderan a la cantidad de bets a leer"""
+        bets = []
+        
+        bets_amount = struct.unpack('>B', self.recv_exact(1))[0]
+        logging.info(f'Must read: {bets_amount} bets')
+
+        for i in range(0, bets_amount):
+            try: 
+                bets.append(self.get_client_bet())
+            except:
+                logging.info(f'Error reading a bet')
+        
+
+
 
 
     def get_client_bet(self) -> Bet:
