@@ -4,7 +4,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/communication"
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"

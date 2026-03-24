@@ -2,7 +2,6 @@ package communication
 
 import (
 	"encoding/binary"
-	"os"
 	"strconv"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
