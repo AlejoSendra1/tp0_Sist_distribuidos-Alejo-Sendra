@@ -56,8 +56,8 @@ class Client_bet_socket:
         #No es apropiado pero se agrega un flag para identificar si algun bet es incorrecto
         """ el primer byte/bytes corresponderan a la cantidad de bets a leer"""
         bets = []
-        at_least_one_with_err = False
 
+        at_least_one_with_err = False
         bytes_to_read = BATCH_HEADER_SIZE
 
         while bytes_to_read > 0:
