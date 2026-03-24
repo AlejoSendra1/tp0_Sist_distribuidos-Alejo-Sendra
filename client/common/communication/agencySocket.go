@@ -46,13 +46,13 @@ func CreateAgencySocket(serverAddr string, id string) (*AgencySocket, error) {
 
 
 
-func (as *AgencySocket) SendBets(bets []domain.Bet, id string) error {
+func (as *AgencySocket) SendBets(bets []domain.Bet, id string, batchAmount int) error {
 	// Sends the given Bet to the server and returns the server response 
 	// in case communication is successfull
 	betsSent := 0 
 
 	for betsSent < len(bets) {
-		serialized, betsInBatch := createBatch(bets, betsSent, id)
+		serialized, betsInBatch := createBatch(bets, betsSent, id, batchAmount)
 		betsSent += betsInBatch
 
 		err := as.writeExact(serialized)

@@ -55,13 +55,11 @@ func SerializeBet(betData *domain.Bet) []byte {
     return bytesToSend
 }
 
-func createBatch(bets []domain.Bet, betsOffset int, agencyNum string) ([]byte, int) {
+func createBatch(bets []domain.Bet, betsOffset int, agencyNum string, batchAmount int) ([]byte, int) {
     var batch []byte
     initialOffset := betsOffset
 
-    batchAmountStr := os.Getenv("batch")
-    batchAmount, err := strconv.Atoi(batchAmountStr)
-    if err != nil || batchAmount == 0 {
+    if batchAmount == 0 {
         batchAmount = DEFAULT_BATCH_AMOUNT
     }
 

@@ -24,8 +24,7 @@ type Client struct {
 type ClientConfig struct {
 	ID            string
 	ServerAddress string
-	LoopAmount    int
-	LoopPeriod    time.Duration
+	BatchAmount    int
 }
 
 // NewClient Initializes a new client receiving the configuration
@@ -56,7 +55,7 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 
 	log.Infof("action: apuestas_enviadas | result: in_progress")
 
-	err = agencySocket.SendBets(bets,c.config.ID) 
+	err = agencySocket.SendBets(bets,c.config.ID,c.config.BatchAmount) 
 	if err != nil {
 		log.Criticalf("%s", err)
 		return err
