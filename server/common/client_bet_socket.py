@@ -19,7 +19,7 @@ class Client_bet_socket:
         bets = []
 
         try:
-            bets = self.get_client_bets()
+            bets, at_least_one_with_err = self.get_client_bets()
 
         except OSError as e:
             if self.is_shutting_down:
@@ -32,6 +32,12 @@ class Client_bet_socket:
         finally:
             self.socket.close()
             logging.info(f'action: clossing_client_socket | result: success | ip: {addr[0]}')
+
+        if at_least_one_with_err:
+            logging.info(f'action: apuesta_recibida | result: fail | cantidad: {len(bets)}')
+        else:
+            logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
+        
         return bets
         
 
@@ -46,9 +52,11 @@ class Client_bet_socket:
             readed += chunk
         return readed
 
-    def get_client_bets(self) -> list:
+    def get_client_bets(self) -> (list,bool):
+        #No es apropiado pero se agrega un flag para identificar si algun bet es incorrecto
         """ el primer byte/bytes corresponderan a la cantidad de bets a leer"""
         bets = []
+        at_least_one_with_err = False
 
         bytes_to_read = BATCH_HEADER_SIZE
 
@@ -66,11 +74,13 @@ class Client_bet_socket:
                 if new_bet is not None:
                     bets_obtained += 1
                     bets.append(new_bet)
+                else:
+                    at_least_one_with_err = True
             
             self.send_response("Ok")
 
         logging.info(f'Get {bets_obtained} from batch')
-        return bets
+        return bets, at_least_one_with_err
         
         
 

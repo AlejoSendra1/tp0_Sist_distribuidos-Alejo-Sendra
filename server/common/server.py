@@ -59,9 +59,7 @@ class Server:
             bets = client_bet_socket.handle_client_connection()
     
             store_bets(bets)
-            
-            logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
-            
+                        
         self.gracefull_shutdown()
     
     def __accept_new_connection(self):
