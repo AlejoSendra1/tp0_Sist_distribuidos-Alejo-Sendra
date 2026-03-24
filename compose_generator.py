@@ -56,6 +56,9 @@ def main():
                      "      - type: bind\n",
                      "        source: ./client/config.yaml\n",
                      "        target: /config.yaml\n"
+                     "      - type: bind\n",
+                     "        source: ./.data/dataset/agency-{num}.csv\n",
+                     "        target: /.data/agency-{num}.csv\n"
                 ]
                 f.writelines(client_config)
 
