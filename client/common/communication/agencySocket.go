@@ -55,18 +55,17 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string) error {
 			)
 
 	for betsSent < len(bets) {
-		serialized, amount := createBatch(bets, betsSent, id)
+		serialized, betsInBatch := createBatch(bets, betsSent, id)
+		betsSent += betsInBatch
 
 		err := as.writeExact(serialized)
 		if err != nil {
 			log.Criticalf("action: send_bets | result: fail | client_id: %v | error: %v", id, err)
 			return err
 		}
-		log.Infof("action: send_bets | result: success | se_enviaron: \"%v\" en el batch", amount)
+		log.Infof("action: send_bets | result: success | se_enviaron: \"%v\" en el batch", betsInBatch)
 
 		servResponse, err := as.GetServerResponse()
-
-		betsSent += amount
 	
 		if err != nil {
 			log.Criticalf("action: receive_message | result: fail | client_id: %v | error: %v",
@@ -78,6 +77,18 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string) error {
 				servResponse,
 			)
 		}
+	}
+	// send redundant batch to close connection
+	serialized, _ := createBatch(bets, betsSent, id)
+	log.Infof("action: BATCH DE CIERRE | %v",
+	serialized,		
+	)
+	err := as.writeExact(serialized)
+	if err != nil {
+		log.Criticalf("action: clossing_server_communication | result: fail | client_id: %v | error: %v",
+		id,
+		err,
+	)
 	}
 
 	as.conn.Close()

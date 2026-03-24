@@ -2,6 +2,7 @@ package communication
 
 import (
 	"encoding/binary"
+	"os"
 	"strconv"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
@@ -42,24 +43,25 @@ func SerializeBet(betData *domain.Bet) []byte {
     bytesToSend = append(bytesToSend, byte(betData.Birthdate.Month())) 
     bytesToSend = append(bytesToSend, byte(betData.Birthdate.Day())) 
 
-    // Strings need to be handled separately
-    bytesToSend = append(bytesToSend, byte(uint8(len(betData.FirstName))))
-    for _, char := range betData.FirstName {
-        bytesToSend = append(bytesToSend, byte(char))
-    }
+    firstNameBytes := []byte(betData.FirstName)
+    bytesToSend = append(bytesToSend, byte(uint8(len(firstNameBytes)))) 
+    bytesToSend = append(bytesToSend, firstNameBytes...)
 
-    bytesToSend = append(bytesToSend, byte(uint8(len(betData.LastName))))
-    for _, char := range betData.LastName {
-        bytesToSend = append(bytesToSend, byte(char))
-    }
+    lastNameBytes := []byte(betData.LastName)
+    bytesToSend = append(bytesToSend, byte(uint8(len(lastNameBytes)))) 
+    bytesToSend = append(bytesToSend, lastNameBytes...)
 
     return bytesToSend
 }
 
 func createBatch(bets []domain.Bet, betsOffset int, agencyNum string) ([]byte, int) {
     var batch []byte
-    
-    for (len(batch) + bets[betsOffset].BytesSize() < 8000 - HEADER_SIZE) && len(bets) > betsOffset { // luego tomar de entorno
+    initialOffset := betsOffset
+
+    batchSizeStr := os.Getenv("batch")
+    batchSize, _ := strconv.Atoi(batchSizeStr)
+
+    for len(bets) > betsOffset && (len(batch) + bets[betsOffset].BytesSize() < batchSize - HEADER_SIZE) { // luego tomar de entorno
         betSerialization := SerializeBet(&bets[betsOffset])
         batch = append(batch, betSerialization...)
         betsOffset += 1
@@ -70,5 +72,5 @@ func createBatch(bets []domain.Bet, betsOffset int, agencyNum string) ([]byte, i
     agencyNumAsInt, _ := strconv.Atoi(agencyNum)
     header[2] = byte(agencyNumAsInt)
 
-    return append(header, batch...), betsOffset
+    return append(header, batch...), betsOffset - initialOffset
 }

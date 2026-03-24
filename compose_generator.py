@@ -47,7 +47,7 @@ def main():
                      "    entrypoint: /client\n",
                      "    environment:\n", 
                     f"      - CLI_ID={num}\n",
-                     "      - batch=54\n"
+                     "      - batch=8000\n"
                      "    networks:\n",
                      "      - testing_net\n",
                      "    depends_on:\n",
