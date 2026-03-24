@@ -142,3 +142,7 @@ func (as *AgencySocket) GetServerResponse() (string,error) {
 
 	return string(serverAnswer), nil
 }
+
+func (as *AgencySocket) Close() {
+	as.conn.Close()
+}

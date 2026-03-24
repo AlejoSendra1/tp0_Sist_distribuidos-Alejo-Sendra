@@ -65,7 +65,7 @@ func (c *Client) StartClient(bets []domain.Bet) error {
     select {
     case <-c.signalChannel:
         log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
-        as.conn.Close() 
+        agencySocket.Close() 
         log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
         return nil
 	default:
