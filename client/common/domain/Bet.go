@@ -38,7 +38,7 @@ var log = logging.MustGetLogger("log")
 func GetBets(agencyNum string) ([]Bet, error) {
 	var bets []Bet
 	log.Infof("action: opening_csv | result: in_progress | directory: ")
-	file, err := os.Open(fmt.Sprintf(".data/agency-%v.csv",agencyNum))
+	file, err := os.Open(fmt.Sprintf("/.data/agency-%v.csv",agencyNum))
     if err != nil {
 		return bets, err
     }
