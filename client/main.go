@@ -122,4 +122,5 @@ func main() {
 
 	client := common.NewClient(clientConfig)
 	client.StartClient(bets)
+	log.Infof("action: finish | result: success")
 }

@@ -78,7 +78,7 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string) error {
 			)
 		}
 	}
-	// send redundant batch to close connection
+	// send redundant batch with 0 size body to close connection
 	serialized, _ := createBatch(bets, betsSent, id)
 	log.Infof("action: BATCH DE CIERRE | %v",
 	serialized,		
