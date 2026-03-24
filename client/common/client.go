@@ -61,6 +61,9 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 		log.Criticalf("%s", err)
 		return err
 	}
+
+
+	log.Infof("action: shutting_down_default | result: in_progress | client_id: %v", c.config.ID)
 	
     select {
     case <-c.signalChannel:
@@ -69,6 +72,8 @@ func (c *Client) StartClient(bets []domain.Bet) error {
         log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
         return nil
 	default:
+		log.Infof("action: shutting_down_default | result: success | client_id: %v", c.config.ID)
+		os.Exit(0)
     }
 	return nil
 }
