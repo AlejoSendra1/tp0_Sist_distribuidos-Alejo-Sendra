@@ -28,8 +28,8 @@ services:
         source: ./client/config.yaml
         target: /config.yaml
       - type: bind
-        source: ./.data/agency-1.csv
-        target: /.data/agency-1.csv
+        source: ./.data
+        target: /.data
 
 networks:
   testing_net:
