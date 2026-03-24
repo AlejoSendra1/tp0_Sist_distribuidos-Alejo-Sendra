@@ -19,7 +19,7 @@ class Client_bet_socket:
         bets = []
 
         try:
-            bets, at_least_one_with_err = self.get_client_bets()
+            bets = self.get_client_bets()
 
         except OSError as e:
             if self.is_shutting_down:
@@ -32,11 +32,6 @@ class Client_bet_socket:
         finally:
             self.socket.close()
             logging.info(f'action: clossing_client_socket | result: success | ip: {addr[0]}')
-
-        if at_least_one_with_err:
-            logging.info(f'action: apuesta_recibida | result: fail | cantidad: {len(bets)}')
-        else:
-            logging.info(f'action: apuesta_recibida | result: success | cantidad: {len(bets)}')
         
         return bets
         
@@ -52,18 +47,16 @@ class Client_bet_socket:
             readed += chunk
         return readed
 
-    def get_client_bets(self) -> (list,bool):
-        #No es apropiado pero se agrega un flag para identificar si algun bet es incorrecto
+    def get_client_bets(self) -> list:
         """ el primer byte/bytes corresponderan a la cantidad de bets a leer"""
         bets = []
 
-        at_least_one_with_err = False
         bytes_to_read = BATCH_HEADER_SIZE
 
         while bytes_to_read > 0:
+            at_least_one_with_err = False
             bytes_to_read = struct.unpack('>H', self.recv_exact(2))[0]
             agency = struct.unpack('>B', self.recv_exact(1))[0]
-            logging.info(f'Must read: {bytes_to_read} bytes from agency: {agency}')
 
             bets_obtained = 0
             read_bytes = 0
@@ -77,10 +70,14 @@ class Client_bet_socket:
                 else:
                     at_least_one_with_err = True
             
-            self.send_response("Ok")
+            if at_least_one_with_err:
+                logging.info(f'action: apuesta_recibida | result: fail | cantidad: {bets_obtained}')
+                self.send_response("Error: At least one bet from the batch has a wrong format")
+            else:
+                logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_obtained}')
+                self.send_response("Ok")
 
-        logging.info(f'Get {bets_obtained} from batch')
-        return bets, at_least_one_with_err
+        return bets
         
         
 

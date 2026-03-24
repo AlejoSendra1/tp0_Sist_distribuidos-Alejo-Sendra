@@ -50,9 +50,6 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string) error {
 	// Sends the given Bet to the server and returns the server response 
 	// in case communication is successfull
 	betsSent := 0 
-	log.Infof("action: BETS A ENVIAR EN SENDBETS %v",
-				len(bets),
-			)
 
 	for betsSent < len(bets) {
 		serialized, betsInBatch := createBatch(bets, betsSent, id)
@@ -80,9 +77,7 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string) error {
 	}
 	// send redundant batch with 0 size body to close connection
 	serialized, _ := createBatch(bets, betsSent, id)
-	log.Infof("action: BATCH DE CIERRE | %v",
-	serialized,		
-	)
+
 	err := as.writeExact(serialized)
 	if err != nil {
 		log.Criticalf("action: clossing_server_communication | result: fail | client_id: %v | error: %v",
