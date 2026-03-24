@@ -19,7 +19,7 @@ services:
     entrypoint: /client
     environment:
       - CLI_ID=1
-      - batch=8000
+      - batch=54
     networks:
       - testing_net
     depends_on:
