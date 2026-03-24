@@ -36,30 +36,28 @@ var log = logging.MustGetLogger("log")
 
 // Gets and validates all fields to create the client Bet
 func GetBets(agencyNum string) ([]Bet, error) {
-	var err error
 	var bets []Bet
-	
-	file, err := os.Open(fmt.Sprintf("agency-%v",agencyNum))
+	log.Infof("action: opening_csv | result: in_progress | directory: ")
+	file, err := os.Open(fmt.Sprintf(".data/dataset/agency-%v.csv",agencyNum))
     if err != nil {
-        return bets, err
+		return bets, err
     }
+	log.Infof("action: opening_csv | result: success")
 
     defer file.Close()
     scanner := bufio.NewScanner(file)
     for scanner.Scan() {
-        line := scanner.Text()
-        // if err == io.EOF {
-        //     if len(textLine) != 0 {
-        //        fmt.Print(textLine) 
-        //     }
-        //     break
-        // }
+		line := scanner.Text()
         if err != nil {
-            return bets,errors.Wrapf(err ,"error reading from file")
+			return bets,errors.Wrapf(err ,"error reading from file")
         }
-        fmt.Print(line) 
-		createBetFromStr(line)
+		new_bet, _ := createBetFromStr(line)
+		bets = append(bets, new_bet)
+
     }
+	
+	log.Infof("action: processing_csv | result: success")
+	log.Infof("CANTIDAD DE BETS LEIDAS DE ARCHIVO %v", len(bets))
 	
     return bets, nil
 }

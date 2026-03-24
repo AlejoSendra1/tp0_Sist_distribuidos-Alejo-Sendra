@@ -54,17 +54,23 @@ class Client_bet_socket:
         agency = struct.unpack('>B', self.recv_exact(1))[0]
         logging.info(f'Must read: {bytes_to_read} bets from agency: {agency}')
 
+        bets_obtained = 0
         read_bytes = 0
         while read_bytes < bytes_to_read:
             try: 
-                bets.append(self.get_client_bet(), agency)
+                new_bet, bytes_read = self.get_client_bet(agency)
+                read_bytes += bytes_read
+                bets_obtained += 1
+                bets.append(new_bet)
             except:
-                logging.info(f'Error reading a bet')
+                logging.info(f'Error reading bet: {bets_obtained+1}')
+        logging.info(f'Get {bets_obtained} from batch')
+        
         
 
-    def get_client_bet(self, agency: int) -> Bet:
+    def get_client_bet(self, agency: int) -> (Bet,int):
         """Reads from the socket every one of the fields of the Bet Object
-        respecting the protocol and return them as a Bet object"""
+        respecting the protocol and return the a Bet object and the bytes read"""
 
         document = struct.unpack('>I', self.recv_exact(4))[0]
 
@@ -83,7 +89,8 @@ class Client_bet_socket:
         first_name = first_name_chunks.decode('utf-8')
         last_name = last_name_chunks.decode('utf-8')
         birthdate = date(year, month, day).isoformat()
-        return Bet(agency,first_name,last_name,document,birthdate,bet_number)
+        bytes_read = 16 + first_name_len + last_name_len
+        return Bet(agency,first_name,last_name,document,birthdate,bet_number), bytes_read
     
     def send_response(self,content: str):
         """Writes exactly the content given in the socket"""

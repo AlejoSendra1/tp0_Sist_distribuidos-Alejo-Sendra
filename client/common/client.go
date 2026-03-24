@@ -56,7 +56,7 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 
 	log.Infof("action: apuestas_enviadas | result: in_progress")
 
-	result, err := agencySocket.SendBets(bets,c.config.ID) 
+	err = agencySocket.SendBets(bets,c.config.ID) 
 	if err != nil {
 		log.Criticalf("%s", err)
 		return err
@@ -64,7 +64,6 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 
 	log.Infof("action: apuestas_enviadas | result: success ")
 
-	log.Infof("Server answered with: %v", result)
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID) // Eliminar luego de probar si pasan los tests --------------
 	
 	select {
