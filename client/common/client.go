@@ -63,18 +63,12 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 	}
 	
     select {
-    case err := <-done:
-        if err != nil {
-            log.Criticalf("%s", err)
-            return err
-        }
-        log.Infof("action: apuestas_enviadas | result: success")
-        return nil
-
     case <-c.signalChannel:
         log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
         as.conn.Close() 
         log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
         return nil
+	default:
     }
+	return nil
 }
