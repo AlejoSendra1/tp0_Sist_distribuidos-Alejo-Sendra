@@ -19,7 +19,6 @@ services:
     entrypoint: /client
     environment:
       - CLI_ID=1
-      - batch=54
     networks:
       - testing_net
     depends_on:
@@ -29,7 +28,7 @@ services:
         source: ./client/config.yaml
         target: /config.yaml
       - type: bind
-        source: ./.data/dataset/agency-1.csv
+        source: ./.data/agency-1.csv
         target: /.data/agency-1.csv
 
 networks:
