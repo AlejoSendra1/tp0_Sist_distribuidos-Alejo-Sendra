@@ -62,8 +62,8 @@ class Client_bet_socket:
                 read_bytes += bytes_read
                 bets_obtained += 1
                 bets.append(new_bet)
-            except:
-                logging.info(f'Error reading bet: {bets_obtained+1}')
+            except Exception as err:
+                logging.info(f'Error reading bet {bets_obtained+1}: {err}')
         logging.info(f'Get {bets_obtained} from batch')
         
         

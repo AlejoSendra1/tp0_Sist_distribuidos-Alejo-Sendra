@@ -68,7 +68,7 @@ func createBatch(bets []domain.Bet, betsOffset int, agencyNum string) ([]byte, i
     header := make([]byte, HEADER_SIZE)
     binary.BigEndian.PutUint16(header[0:2], uint16(len(batch)))
     agencyNumAsInt, _ := strconv.Atoi(agencyNum)
-    header = append(header, byte(agencyNumAsInt))
+    header[2] = byte(agencyNumAsInt)
 
     return append(header, batch...), betsOffset
 }
