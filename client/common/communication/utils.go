@@ -12,6 +12,7 @@ const (
 	FIRST_NAME_MAX_SIZE = 64
 	LAST_NAME_MAX_SIZE = 64
     HEADER_SIZE = 3 // 2 B for the packet size + 1 B for the agency number
+    DEFAULT_BATCH_SIZE = 8000
 )
 
 // Serilize the given Bet Struct to be send to the server
@@ -59,7 +60,10 @@ func createBatch(bets []domain.Bet, betsOffset int, agencyNum string) ([]byte, i
     initialOffset := betsOffset
 
     batchSizeStr := os.Getenv("batch")
-    batchSize, _ := strconv.Atoi(batchSizeStr)
+    batchSize, err := strconv.Atoi(batchSizeStr)
+    if err != nil || batchSize == 0 {
+        batchSize = DEFAULT_BATCH_SIZE
+    }
 
     for len(bets) > betsOffset && (len(batch) + bets[betsOffset].BytesSize() < batchSize - HEADER_SIZE) { // luego tomar de entorno
         betSerialization := SerializeBet(&bets[betsOffset])

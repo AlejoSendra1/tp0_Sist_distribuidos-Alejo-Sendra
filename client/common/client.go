@@ -61,15 +61,20 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 		log.Criticalf("%s", err)
 		return err
 	}
-
-	log.Infof("action: apuestas_enviadas | result: success ")
-
-	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID) // Eliminar luego de probar si pasan los tests --------------
 	
-	select {
-		case <-c.signalChannel:
-			log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
-			log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
-		return nil
-	}	
+    select {
+    case err := <-done:
+        if err != nil {
+            log.Criticalf("%s", err)
+            return err
+        }
+        log.Infof("action: apuestas_enviadas | result: success")
+        return nil
+
+    case <-c.signalChannel:
+        log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
+        as.conn.Close() 
+        log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
+        return nil
+    }
 }
