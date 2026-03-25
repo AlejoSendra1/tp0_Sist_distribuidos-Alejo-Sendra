@@ -30,6 +30,8 @@ class Server:
         exit(0)
 
     def gracefull_shutdown(self):
+        for thread in self.clients_threads:
+            thread.join()
         for agency_socket in self.agencies_sockets:
             try:
                 # Check if socket is still valid before calling getpeername
@@ -70,8 +72,6 @@ class Server:
             self.handle_results()   
 
         finally:
-            for thread in self.clients_threads:
-                thread.join()
             self.gracefull_shutdown()
     
     def __accept_new_connection(self):
