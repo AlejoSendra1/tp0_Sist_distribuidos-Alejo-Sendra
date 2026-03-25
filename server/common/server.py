@@ -2,6 +2,7 @@ import os
 import socket
 import signal
 import logging
+import threading
 
 from common.client_bet_socket import Client_bet_socket
 from common.utils import store_bets,get_winners
@@ -14,6 +15,9 @@ class Server:
         self._server_socket.listen(listen_backlog)
         self.is_shutting_down = False
         self.agencies_sockets = []
+        self.clients_threads = []
+        self.bets_utils_lock = threading.Lock()  # lock for bets load
+
         signal.signal(signal.SIGTERM, self.handle_sigterm)
 
     def handle_sigterm(self, signum, frame):
@@ -45,27 +49,29 @@ class Server:
         """
 
         # the server
-        agencies_done = 0
-        
         client_amount = int(os.getenv("CLIENT_AMOUNT", "0"))
+        barrier = threading.Barrier(client_amount + 1)
+
         try: 
-            while not self.is_shutting_down:
-                if agencies_done >= client_amount:
-                    break
+            while not self.is_shutting_down and len(self.clients_threads) < client_amount:# tambien modif en el ej7
+
                 new_client_socket = self.__accept_new_connection()
-                
                 if self.is_shutting_down:
                     break
                 
                 client_bet_socket = Client_bet_socket(new_client_socket)
-                bets = client_bet_socket.handle_client_connection() # NO CERRAR EL SOCKET
-                store_bets(bets)
                 self.agencies_sockets.append(client_bet_socket)
-                agencies_done += 1
 
+                client_thread = threading.Thread(target=self.handle_client_connection, args=(client_bet_socket,))
+                self.clients_threads.append(client_thread)
+
+            barrier.wait()
             logging.info('action: sorteo | result: success')
             self.handle_results()   
+
         finally:
+            for thread in self.clients_threads:
+                thread.join()
             self.gracefull_shutdown()
     
     def __accept_new_connection(self):
@@ -89,15 +95,25 @@ class Server:
 
         return c
 
+    def handle_client_connection(self, client_bet_socket: Client_bet_socket, barrier: threading.Barrier):
+        bets = client_bet_socket.handle_client_connection()
+
+        with self.bets_utils_lock:
+            store_bets(bets)
+
+        barrier.wait()
+                
+
     def handle_results(self):
         winners = get_winners()
 
         for agency_socket in self.agencies_sockets:
+
             agency_id = agency_socket.handle_winner_rqst()
-            
             agency_winners = []
             if agency_id in winners:
                 agency_winners = winners[agency_id]
             
-            agency_socket.notif_winners(agency_winners)
+            client_thread = threading.Thread(target=agency_socket.notif_winners, args=(agency_winners,))
+            self.clients_threads.append(client_thread)
             logging.info(f'action: send_winners | result: success | agency: {agency_id} | cant: {len(agency_winners)}')
