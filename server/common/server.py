@@ -50,7 +50,6 @@ class Server:
         finishes, servers starts to accept new connections again
         """
 
-        # the server
         client_amount = int(os.getenv("CLIENT_AMOUNT", "0"))
         barrier = threading.Barrier(client_amount + 1)
 
@@ -64,8 +63,9 @@ class Server:
                 client_bet_socket = Client_bet_socket(new_client_socket)
                 self.agencies_sockets.append(client_bet_socket)
 
-                client_thread = threading.Thread(target=self.handle_client_connection, args=(client_bet_socket,))
+                client_thread = threading.Thread(target=self.handle_client_connection, args=(client_bet_socket,barrier,))
                 self.clients_threads.append(client_thread)
+                client_thread.start()
 
             barrier.wait()
             logging.info('action: sorteo | result: success')
@@ -116,4 +116,5 @@ class Server:
             
             client_thread = threading.Thread(target=agency_socket.notif_winners, args=(agency_winners,))
             self.clients_threads.append(client_thread)
+            client_thread.start()
             logging.info(f'action: send_winners | result: success | agency: {agency_id} | cant: {len(agency_winners)}')
