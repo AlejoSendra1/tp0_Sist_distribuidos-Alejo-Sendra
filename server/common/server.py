@@ -94,8 +94,7 @@ class Server:
 
         for agency_socket in self.agencies_sockets:
             agency_id = agency_socket.handle_winner_rqst()
-            logging.info(f'action: pasando winners a agency: {agency_id}')
-            #logging.info(f'action winners: {vars(winners)}')
+            
             agency_winners = []
             if agency_id in winners:
                 agency_winners = winners[agency_id]
