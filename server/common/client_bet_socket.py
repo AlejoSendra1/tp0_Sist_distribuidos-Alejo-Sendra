@@ -89,7 +89,7 @@ class Client_bet_socket:
                 logging.info(f'action: apuesta_recibida | result: fail | cantidad: {bets_obtained}')
                 self.send_response("Error: At least one bet from the batch has a wrong format")
             else:
-                #logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_obtained}')
+                logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_obtained}')
                 self.send_response("Ok")
 
         return bets
