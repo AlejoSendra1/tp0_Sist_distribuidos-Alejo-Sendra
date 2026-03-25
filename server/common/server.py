@@ -56,9 +56,12 @@ class Server:
                 break
             
             client_bet_socket = Client_bet_socket(new_client_socket)
-            bets = client_bet_socket.handle_client_connection()
-    
-            store_bets(bets)
+
+            while not self.is_shutting_down:
+                bets = client_bet_socket.handle_client_connection()
+                if len(bets) == 0:
+                    break
+                store_bets(bets)
                         
         self.gracefull_shutdown()
     

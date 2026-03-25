@@ -43,7 +43,7 @@ func NewClient(config ClientConfig) *Client {
 
 
 // StartClient Send messages to the client until some time threshold is met
-func (c *Client) StartClient(bets []domain.Bet) error {
+func (c *Client) StartClient() error {
 
 	// Create the connection to the server
 	agencySocket, err:= communication.CreateAgencySocket(c.config.ServerAddress,c.config.ID)
@@ -51,15 +51,34 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 		log.Criticalf("%s", err)
 		return err
 	}
-
+	
+	reader, err := domain.NewReader(c.config.ID,c.config.BatchAmount)
+	defer reader.Close()
+	if err != nil {
+		return nil, err
+    }
 	log.Infof("action: apuestas_enviadas | result: in_progress")
 
-	err = agencySocket.SendBets(bets,c.config.ID,c.config.BatchAmount) 
-	if err != nil {
-		log.Criticalf("%s", err)
-		return err
-	}
+	for {
+		log.Infof("action: get_data_csv | result: in_progress")
+		bets, DataErr := reader.GetBatch()
+		if DataErr != nil {
+			log.Infof("action: get_data_csv | result: fail")
+			log.Criticalf("%v", err)
+			return
+		}
+		log.Infof("action: get_data_csv | result: success")
+		
+		err = agencySocket.SendBets(bets,c.config.ID) 
+		if err != nil {
+			log.Criticalf("%s", err)
+			return err
+		}
 
+		if len(bets) == 0 {
+			break
+		}
+	}
 
 	log.Infof("action: shutting_down_default | result: in_progress | client_id: %v", c.config.ID)
 	

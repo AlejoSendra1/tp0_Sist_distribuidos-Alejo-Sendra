@@ -21,6 +21,12 @@ type Bet struct {
 	LastName string
 }
 
+type Reader {
+	file *os.file
+	scanner *bufio.Scanner
+	batchAmount int
+}
+
 const (
 	FIRSTNAME_CSV_POSITION = 0
 	LASTNAME_CSV_POSITION = 1
@@ -32,28 +38,36 @@ const (
 
 var log = logging.MustGetLogger("log")
 
+func Close() {
+	file.close()
+}
 
-
-// Gets and validates all fields to create the client Bet
-func GetBets(agencyNum string) ([]Bet, error) {
-	var bets []Bet
-	log.Infof("action: opening_csv | result: in_progress | directory: ")
+func NewReader(agencyNum string, batchAmount int) (*Reader,error) {
 	file, err := os.Open(fmt.Sprintf("/.data/agency-%v.csv",agencyNum))
     if err != nil {
-		return bets, err
+		return nil, err
     }
 	log.Infof("action: opening_csv | result: success")
 
-    defer file.Close()
-    scanner := bufio.NewScanner(file)
-    for scanner.Scan() {
+	reader := &Reader{
+		file: file
+		scanner: bufio.NewScanner(file)
+		batchAmount: batchAmount
+	}
+	return reader, nil
+}
+
+// Gets as many bets from the file as indicated by the batchAmount
+func (r *Reader)GetBatch() ([]Bet, error) {
+	var bets []Bet
+	
+    for len(bets) < batchAmount && scanner.Scan() {
 		line := scanner.Text()
         if err != nil {
 			return bets,errors.Wrapf(err ,"error reading from file")
         }
 		new_bet, _ := createBetFromStr(line)
 		bets = append(bets, new_bet)
-
     }
 	
 	log.Infof("action: processing_csv | result: success")
