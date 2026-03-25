@@ -37,12 +37,11 @@ var log = logging.MustGetLogger("log")
 // Gets and validates all fields to create the client Bet
 func GetBets(agencyNum string) ([]Bet, error) {
 	var bets []Bet
-	log.Infof("action: opening_csv | result: in_progress | directory: ")
+	
 	file, err := os.Open(fmt.Sprintf("/.data/agency-%v.csv",agencyNum))
     if err != nil {
 		return bets, err
     }
-	log.Infof("action: opening_csv | result: success")
 
     defer file.Close()
     scanner := bufio.NewScanner(file)
@@ -55,9 +54,6 @@ func GetBets(agencyNum string) ([]Bet, error) {
 		bets = append(bets, new_bet)
 
     }
-	
-	log.Infof("action: processing_csv | result: success")
-	log.Infof("CANTIDAD DE BETS LEIDAS DE ARCHIVO %v", len(bets))
 	
     return bets, nil
 }
@@ -90,9 +86,9 @@ func createBetFromStr(betFields string) (Bet,error) {
 		return bet, errors.Wrapf(err, "Invalid birthdate")
 	}
 
+	//NOMBRE Y APELLIDO
 	bet.FirstName = fields[FIRSTNAME_CSV_POSITION]
 	bet.LastName = fields[LASTNAME_CSV_POSITION]
-	//NOMBRE Y APELLIDO
 	if len(bet.FirstName) == 0 || len(bet.LastName) == 0 {
 		return bet, errors.New("Name fields can't be empty")
 	} 

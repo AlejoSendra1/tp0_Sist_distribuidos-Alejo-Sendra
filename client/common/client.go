@@ -52,7 +52,7 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 		return err
 	}
 
-	log.Infof("action: apuestas_enviadas | result: in_progress")
+	log.Infof("action: apuestas_enviadas | result: in_progress | client_id: %v", c.config.ID)
 
 	err = agencySocket.SendBets(bets,c.config.ID,c.config.BatchAmount) 
 	if err != nil {

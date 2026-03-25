@@ -173,10 +173,10 @@ func (as *AgencySocket) GetWinners() error {
 		return err
 	}
 	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %d", winnersAmount[0])
-	// 3. READ THE DATA (This prevents the Connection Reset)
-    winners := make([]uint32, uint8(winnersAmount[0]))
+
+	winners := make([]uint32, uint8(winnersAmount[0]))
     for i := uint8(0); i < uint8(winnersAmount[0]); i++ {
-        dniBytes, err := recvExact(as.conn, 4) // Python sends '>I' (4 bytes)
+        dniBytes, err := recvExact(as.conn, 4) 
         if err != nil {
             log.Criticalf("action: receive_winners | result: fail | error: %v", err)
             return err
@@ -185,6 +185,5 @@ func (as *AgencySocket) GetWinners() error {
     }
     
     log.Infof("action: lista_ganadores | result: success | ganadores: %v", winners)
-    return nil
 	return nil
 }

@@ -109,16 +109,16 @@ func main() {
 		BatchAmount:    v.GetInt("batch.maxAmount"),
 	}
 
-	log.Infof("action: get_data_csv | result: in_progress")
+	log.Infof("source: %v | action: get_data_csv | result: in_progress",clientConfig.ID)
 	bets, DataErr := domain.GetBets(clientConfig.ID)
 	if DataErr != nil {
-		log.Infof("action: get_data_csv | result: fail")
+		log.Infof("source: %v | action: get_data_csv | result: fail",clientConfig.ID)
 		log.Criticalf("%v", err)
 		return
 	}
-	log.Infof("action: get_data_csv | result: success")
+	log.Infof("source: %v | action: get_data_csv | result: success",clientConfig.ID)
 
 	client := common.NewClient(clientConfig)
 	client.StartClient(bets)
-	log.Infof("action: finish | result: success")
+	log.Infof("source: %v | action: finish | result: success",clientConfig.ID)
 }
