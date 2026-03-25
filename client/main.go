@@ -109,7 +109,6 @@ func main() {
 		BatchAmount:    v.GetInt("batch.maxAmount"),
 	}
 
-	log.Infof("source: %v | action: get_data_csv | result: in_progress",clientConfig.ID)
 	bets, DataErr := domain.GetBets(clientConfig.ID)
 	if DataErr != nil {
 		log.Infof("source: %v | action: get_data_csv | result: fail",clientConfig.ID)
