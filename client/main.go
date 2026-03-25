@@ -115,7 +115,6 @@ func main() {
 		log.Criticalf("%v", err)
 		return
 	}
-	log.Infof("source: %v | action: get_data_csv | result: success",clientConfig.ID)
 
 	client := common.NewClient(clientConfig)
 	client.StartClient(bets)
