@@ -60,6 +60,7 @@ func (c *Client) StartClient(bets []domain.Bet) error {
 		return err
 	}
 
+	agencySocket.GetWinners() //err?
 
 	log.Infof("action: shutting_down_default | result: in_progress | client_id: %v", c.config.ID)
 	
@@ -70,6 +71,7 @@ func (c *Client) StartClient(bets []domain.Bet) error {
         log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
         return nil
 	default:
+		agencySocket.Close() 
 		log.Infof("action: shutting_down_default | result: success | client_id: %v", c.config.ID)
 		os.Exit(0)
     }

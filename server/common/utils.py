@@ -1,7 +1,7 @@
 import csv
 import datetime
 import time
-
+import logging
 
 """ Bets storage location. """
 STORAGE_FILEPATH = "./bets.csv"
@@ -49,3 +49,13 @@ def load_bets() -> list[Bet]:
         for row in reader:
             yield Bet(row[0], row[1], row[2], row[3], row[4], row[5])
 
+
+def get_winners() -> dict:
+    winners = {}
+    for bet in load_bets():
+        if has_won(bet):
+            logging.info(f"La bet: {vars(bet)} | result: es ganadora")
+            winners.setdefault(bet.agency, []).append(bet.document)
+    
+    return winners
+ 

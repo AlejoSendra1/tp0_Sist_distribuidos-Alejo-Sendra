@@ -3,8 +3,9 @@ import signal
 import logging
 
 from common.client_bet_socket import Client_bet_socket
-from common.utils import store_bets
+from common.utils import store_bets,get_winners
 
+AGENCIES_AMOUNT = 2
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -13,31 +14,27 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self.is_shutting_down = False
+        self.agencies_sockets = []
         signal.signal(signal.SIGTERM, self.handle_sigterm)
 
     def handle_sigterm(self, signum, frame):
         logging.info("action: shutting_down | result: in_progress")
         self.is_shutting_down = True       
 
-        try:
-            logging.info("action: clossing_listening_socket | result: in_progress")
-            self._server_socket.close()
-            logging.info("action: clossing_listening_socket | result: success")
-        except OSError as e:
-            logging.info("action: clossing_listening_socket | result: fail")
-            exit(1)
-
-        try:
-            if self.client_sock is not None:
-                logging.info("action: clossing_client_socket | result: in_progress")
-                self.client_sock.close()
-                logging.info("action: clossing_client_socket | result: success")
-        except OSError as e:
-            logging.info("action: clossing_client_socket | result: fail")
-            exit(1)
+        self.gracefull_shutdown()
         
         logging.info("action: shutting_down | result: success")    
         exit(0)
+
+    def gracefull_shutdown(self):
+        for agency_socket in self.agencies_sockets:
+            try:
+                # Check if socket is still valid before calling getpeername
+                peer = agency_socket.socket.getpeername()
+                agency_socket.close()
+                logging.info(f'action: clossing_client_socket | result: success | ip: {peer}')
+            except OSError:
+                logging.info('action: clossing_client_socket | result: socket_already_closed')
 
     def run(self):
         """
@@ -49,18 +46,26 @@ class Server:
         """
 
         # the server
-        while not self.is_shutting_down:
-            new_client_socket = self.__accept_new_connection()
-            
-            if self.is_shutting_down:
-                break
-            
-            client_bet_socket = Client_bet_socket(new_client_socket)
-            bets = client_bet_socket.handle_client_connection()
-    
-            store_bets(bets)
-                        
-        self.gracefull_shutdown()
+        agencies_done = 0
+        try: 
+            while not self.is_shutting_down:
+                if agencies_done >= AGENCIES_AMOUNT:
+                    break
+                new_client_socket = self.__accept_new_connection()
+                
+                if self.is_shutting_down:
+                    break
+                
+                client_bet_socket = Client_bet_socket(new_client_socket)
+                bets = client_bet_socket.handle_client_connection() # NO CERRAR EL SOCKET
+                store_bets(bets)
+                self.agencies_sockets.append(client_bet_socket)
+                agencies_done += 1
+
+            logging.info('action: sorteo | result: success')
+            self.handle_results()   
+        finally:
+            self.gracefull_shutdown()
     
     def __accept_new_connection(self):
         """
@@ -79,6 +84,20 @@ class Server:
         except OSError as e:
             if self.is_shutting_down:
                 return
-            logging.error("action: accept_connections | result: fail | error: {e}")
+            logging.error(f"action: accept_connections | result: fail | error: {e}")
 
         return c
+
+    def handle_results(self):
+        winners = get_winners()
+
+        for agency_socket in self.agencies_sockets:
+            agency_id = agency_socket.handle_winner_rqst()
+            logging.info(f'action: pasando winners a agency: {agency_id}')
+            #logging.info(f'action winners: {vars(winners)}')
+            agency_winners = []
+            if agency_id in winners:
+                agency_winners = winners[agency_id]
+            
+            agency_socket.notif_winners(agency_winners)
+            logging.info(f'action: send_winners | result: success | agency: {agency_id} | cant: {len(agency_winners)}')

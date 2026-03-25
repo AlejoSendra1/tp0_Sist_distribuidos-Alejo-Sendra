@@ -3,7 +3,8 @@ package communication
 import (
 	"io"
 	"net"
-
+	"strconv"
+	"encoding/binary"
 	"github.com/op/go-logging"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
@@ -15,6 +16,11 @@ type AgencySocket struct {
 }
 
 var log = logging.MustGetLogger("log")
+
+const (
+	WINNERS_RQST_CODE = byte(0x02) // TODO convertir en env var y tmb la de python
+	WINNERS_RQST_SIZE = 2
+)
 
 // CreateClientSocket Initializes client socket. In case of
 // failure, error is printed in stdout/stderr and exit 1
@@ -60,20 +66,25 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string, batchAmount int) 
 			log.Criticalf("action: send_bets | result: fail | client_id: %v | error: %v", id, err)
 			return err
 		}
-		log.Infof("action: send_bets | result: success | se_enviaron: \"%v\" en el batch", betsInBatch)
+		//log.Infof("action: send_bets | result: success | se_enviaron: \"%v\" en el batch", betsInBatch)
 
-		servResponse, err := as.GetServerResponse()
+		_, err = as.GetServerResponse()
 	
 		if err != nil {
 			log.Criticalf("action: receive_message | result: fail | client_id: %v | error: %v",
 				id,
 				err,
 			)
-		} else {
+		} 
+		/*
+		else {
 			log.Infof("action: server_response | result: success | answer: %v",
 				servResponse,
 			)
 		}
+		*/
+
+		
 	}
 	// send redundant batch with 0 size body to close connection
 	serialized, _ := createBatch(bets, betsSent, id, batchAmount)
@@ -85,11 +96,6 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string, batchAmount int) 
 		err,
 	)
 	}
-
-	as.conn.Close()
-	log.Infof("action: socket_closed | result: success | client_id: %v",
-			id,		
-		)
 
 	return nil
 }
@@ -103,10 +109,11 @@ func (as *AgencySocket) writeExact(content []byte) error {
 		if err != nil {
 			return err
 		}
-		log.Infof("action: sent | result: success | content: %v | amount_of_bytes: %v",
-			content[bytesWritten:],
+		/*
+		log.Infof("action: sent | result: success | amount_of_bytes: %v",
 			len(content),
 		)
+			*/
 	}
 	return nil
 }
@@ -140,4 +147,44 @@ func (as *AgencySocket) GetServerResponse() (string,error) {
 
 func (as *AgencySocket) Close() {
 	as.conn.Close()
+	log.Infof("action: socket_closed | result: success | client_id: %v",
+			as.id,		
+		)
+
+}
+
+// Sends to the server a request for the winners and waits for the answer
+func (as *AgencySocket) GetWinners() error {
+	// request
+	rqstForWinners := make([]byte, HEADER_SIZE)
+	rqstForWinners[0] = WINNERS_RQST_CODE
+    agencyNumAsInt, _ := strconv.Atoi(as.id)
+    rqstForWinners[1] = byte(agencyNumAsInt)
+ 
+	if err := as.writeExact(rqstForWinners); err != nil {
+		log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
+		return err
+	}
+	log.Infof("action: consulta_ganadores | result: in_progress | client_id: %v", as.id)
+ 
+	winnersAmount, err := recvExact(as.conn, 1)
+	if err != nil {
+		log.Criticalf("action: consulta_ganadores | result: fail | error: %v", err)
+		return err
+	}
+	log.Infof("action: consulta_ganadores | result: success | cant_ganadores: %d", winnersAmount[0])
+	// 3. READ THE DATA (This prevents the Connection Reset)
+    winners := make([]uint32, uint8(winnersAmount[0]))
+    for i := uint8(0); i < uint8(winnersAmount[0]); i++ {
+        dniBytes, err := recvExact(as.conn, 4) // Python sends '>I' (4 bytes)
+        if err != nil {
+            log.Criticalf("action: receive_winners | result: fail | error: %v", err)
+            return err
+        }
+        winners[i] = binary.BigEndian.Uint32(dniBytes)
+    }
+    
+    log.Infof("action: lista_ganadores | result: success | ganadores: %v", winners)
+    return nil
+	return nil
 }
