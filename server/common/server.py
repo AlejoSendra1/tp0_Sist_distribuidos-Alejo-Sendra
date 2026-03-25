@@ -1,11 +1,10 @@
+import os
 import socket
 import signal
 import logging
 
 from common.client_bet_socket import Client_bet_socket
 from common.utils import store_bets,get_winners
-
-AGENCIES_AMOUNT = 5
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -47,9 +46,11 @@ class Server:
 
         # the server
         agencies_done = 0
+        
+        client_amount = int(os.getenv("CLIENT_AMOUNT", "0"))
         try: 
             while not self.is_shutting_down:
-                if agencies_done >= AGENCIES_AMOUNT:
+                if agencies_done >= client_amount:
                     break
                 new_client_socket = self.__accept_new_connection()
                 

@@ -2,20 +2,6 @@ import sys
 FILE_NAME_ARGP = 1
 CLIENTS_NUM_ARGP = 2
 DOCKER_PROY_NAME = "name: tp0"
-DOCKER_SERVER_CONFIG = [
-    "  server:\n",
-    "    container_name: server\n",
-    "    image: server:latest\n",
-    "    entrypoint: python3 /main.py\n", 
-    "    environment:\n",
-    "      - PYTHONUNBUFFERED=1\n", 
-    "    networks:\n",
-    "      - testing_net\n",
-    "    volumes:\n",
-    "      - type: bind\n",
-    "        source: ./server/config.ini\n",
-    "        target: /config.ini\n"
-]
 
 DOCKER_NETWORKS_CONFIG = [
     "\n",
@@ -36,7 +22,22 @@ def main():
         with open(sys.argv[FILE_NAME_ARGP], 'w') as f:
             f.writelines(DOCKER_PROY_NAME+"\n")
             f.write("services:"+"\n")
-            f.writelines(DOCKER_SERVER_CONFIG)
+            docker_server_config = [
+                    "  server:\n",
+                    "    container_name: server\n",
+                    "    image: server:latest\n",
+                    "    entrypoint: python3 /main.py\n", 
+                    "    environment:\n",
+                    "      - PYTHONUNBUFFERED=1\n", 
+                   f"      - CLIENT_AMOUNT={sys.argv[CLIENTS_NUM_ARGP]}\n",
+                    "    networks:\n",
+                    "      - testing_net\n",
+                    "    volumes:\n",
+                    "      - type: bind\n",
+                    "        source: ./server/config.ini\n",
+                    "        target: /config.ini\n"
+                ]
+            f.writelines(docker_server_config)
 
             for num in range(1,int(sys.argv[CLIENTS_NUM_ARGP])+1):
                 client_config = [
