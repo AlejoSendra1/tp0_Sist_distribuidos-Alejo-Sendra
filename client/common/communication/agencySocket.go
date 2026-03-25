@@ -88,14 +88,14 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string, batchAmount int) 
 	}
 	// send redundant batch with 0 size body to close connection
 	serialized, _ := createBatch(bets, betsSent, id, batchAmount)
-
 	err := as.writeExact(serialized)
 	if err != nil {
 		log.Criticalf("action: clossing_server_communication | result: fail | client_id: %v | error: %v",
-		id,
-		err,
-	)
+			id,
+			err,
+		)		
 	}
+	as.GetServerResponse()
 
 	return nil
 }

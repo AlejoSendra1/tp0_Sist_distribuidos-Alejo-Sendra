@@ -5,7 +5,7 @@ import logging
 from common.client_bet_socket import Client_bet_socket
 from common.utils import store_bets,get_winners
 
-AGENCIES_AMOUNT = 2
+AGENCIES_AMOUNT = 5
 
 class Server:
     def __init__(self, port, listen_backlog):
