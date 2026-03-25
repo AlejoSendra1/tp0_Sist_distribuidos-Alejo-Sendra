@@ -143,7 +143,7 @@ class Client_bet_socket:
             birthdate = date(year, month, day).isoformat()
             return Bet(agency,first_name,last_name,document,birthdate,bet_number), amount_bytes_read
         except Exception as err:
-            logging.info(f'Error reading bet: {err}')
+            logging.info(f'Error reading bet: {err}') # cambiar a log tipo error
             return None, amount_bytes_read
         
     def handle_winner_rqst(self): # necesito recibir el header y el numero de agency y devolver el agency
@@ -159,7 +159,6 @@ class Client_bet_socket:
 
     def notif_winners(self,agency_winners: list): # serializa los datos y se lo manda a la agencia 
         """TO DO description"""
-        logging.info(f'action: enviando winners | winners {agency_winners} | cant: {len(agency_winners)}')
         bytes_to_read = struct.pack('>B', len(agency_winners))
 
         to_send = bytes_to_read

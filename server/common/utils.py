@@ -54,7 +54,6 @@ def get_winners() -> dict:
     winners = {}
     for bet in load_bets():
         if has_won(bet):
-            logging.info(f"La bet: {vars(bet)} | result: es ganadora")
             winners.setdefault(bet.agency, []).append(bet.document)
     
     return winners
