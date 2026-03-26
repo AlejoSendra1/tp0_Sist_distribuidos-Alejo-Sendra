@@ -52,19 +52,19 @@ func CreateAgencySocket(serverAddr string, id string) (*AgencySocket, error) {
 
 
 
-func (as *AgencySocket) SendBets(bets []domain.Bet, id string, batchAmount int) error {
+func (as *AgencySocket) SendBets(bets []domain.Bet, id string) error {
 	// Sends the given Bet to the server and returns the server response 
 	// in case communication is successfull
-	betsSent := 0 
+	
 	//defer as.Close()
-	serialized, betsInBatch := createBatch(bets, betsSent, id, batchAmount)
+	serialized := createBatch(bets, id)
 
 	err := as.writeExact(serialized)
 	if err != nil {
 		log.Criticalf("action: send_bets | result: fail | client_id: %v | error: %v", id, err)
 		return err
 	}
-	log.Infof("action: send_bets | result: success | se_enviaron: \"%v\" en el batch", betsInBatch)
+	log.Infof("action: send_bets | result: success | se_enviaron: \"%v\" en el batch", len(bets))
 
 	servResponse, err := as.GetServerResponse()
 	if err != nil {

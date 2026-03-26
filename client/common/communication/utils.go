@@ -54,15 +54,13 @@ func SerializeBet(betData *domain.Bet) []byte {
     return bytesToSend
 }
 
-func createBatch(bets []domain.Bet, betsOffset int, agencyNum string, batchAmount int) ([]byte, int) {
+func createBatch(bets []domain.Bet, agencyNum string) []byte {
+    // given an array of bets serialize each one of them as a packet to be send
+    // add the agency number and 
     var batch []byte
-    initialOffset := betsOffset
 
-    if batchAmount == 0 {
-        batchAmount = DEFAULT_BATCH_AMOUNT
-    }
-
-    for len(bets) > betsOffset && (betsOffset - initialOffset < batchAmount) {
+    betsOffset := 0
+    for len(bets) > betsOffset {
         betSerialization := SerializeBet(&bets[betsOffset])
         batch = append(batch, betSerialization...)
         betsOffset += 1
@@ -73,5 +71,5 @@ func createBatch(bets []domain.Bet, betsOffset int, agencyNum string, batchAmoun
     agencyNumAsInt, _ := strconv.Atoi(agencyNum)
     header[2] = byte(agencyNumAsInt)
 
-    return append(header, batch...), betsOffset - initialOffset
+    return append(header, batch...)
 }
