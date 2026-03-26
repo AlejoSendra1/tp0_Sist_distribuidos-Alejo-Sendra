@@ -51,10 +51,8 @@ func (c *Client) StartClient() error {
 		log.Criticalf("%s", err)
 		return err
 	}
-<<<<<<< HEAD
 
 	log.Infof("action: apuestas_enviadas | result: in_progress | client_id: %v", c.config.ID)
-=======
 	
 	reader, err := domain.NewReader(c.config.ID,c.config.BatchAmount)
 	defer reader.Close()
@@ -62,7 +60,6 @@ func (c *Client) StartClient() error {
 		return err
     }
 	log.Infof("action: apuestas_enviadas | result: in_progress")
->>>>>>> ej6
 
 	for {
 		log.Infof("action: get_data_csv | result: in_progress")
@@ -80,17 +77,14 @@ func (c *Client) StartClient() error {
 			return err
 		}
 
-<<<<<<< HEAD
-	agencySocket.GetWinners() //err?
-=======
 		if len(bets) == 0 {
 			break
 		}
 	}
->>>>>>> ej6
-
-	log.Infof("action: shutting_down_default | result: in_progress | client_id: %v", c.config.ID)
 	
+	agencySocket.GetWinners()
+	
+	log.Infof("action: shutting_down_default | result: in_progress | client_id: %v", c.config.ID)
     select {
     case <-c.signalChannel:
         log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
