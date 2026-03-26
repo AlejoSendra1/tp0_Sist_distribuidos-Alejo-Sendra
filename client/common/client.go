@@ -60,6 +60,11 @@ func (c *Client) createClientSocket() error {
 	return nil
 }
 
+func (c *Client) GracefullShutdown() {
+	c.conn.Close()
+	log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
+}
+
 // StartClientLoop Send messages to the client until some time threshold is met
 func (c *Client) StartClientLoop() {
 	// There is an autoincremental msgID to identify every message sent
@@ -97,9 +102,9 @@ func (c *Client) StartClientLoop() {
 
 		select {
 			case <-c.signalChannel:
-            	log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
-            	log.Infof("action: shutting_down | result: success | client_id: %v", c.config.ID)
-            return
+				log.Infof("action: SIGTERM_caught | result: success | client_id: %v", c.config.ID)
+            	c.GracefullShutdown()
+         	return
         	case <-time.After(c.config.LoopPeriod):
         }
 		
@@ -109,4 +114,5 @@ func (c *Client) StartClientLoop() {
 
 	}
 	log.Infof("action: loop_finished | result: success | client_id: %v", c.config.ID)
+	GracefullShutdown()
 }

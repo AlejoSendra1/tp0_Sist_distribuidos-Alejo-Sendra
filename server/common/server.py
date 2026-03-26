@@ -16,14 +16,15 @@ class Server:
     def handle_sigterm(self, signum, frame):
         logging.info("action: shutting_down | result: in_progress")
         self.is_shutting_down = True       
+        self.gracefull_shutdown()
 
+    def gracefull_shutdown(self):
         try:
             logging.info("action: clossing_listening_socket | result: in_progress")
             self._server_socket.close()
             logging.info("action: clossing_listening_socket | result: success")
         except OSError as e:
             logging.info("action: clossing_listening_socket | result: fail")
-            exit(1)
 
         try:
             if self.client_sock is not None:
@@ -32,7 +33,6 @@ class Server:
                 logging.info("action: clossing_client_socket | result: success")
         except OSError as e:
             logging.info("action: clossing_client_socket | result: fail")
-            exit(1)
         
         logging.info("action: shutting_down | result: success")    
         exit(0)
