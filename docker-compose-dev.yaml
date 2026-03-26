@@ -49,28 +49,6 @@ services:
       - type: bind
         source: ./.data
         target: /.data
-
-<<<<<<< HEAD
-=======
-  client3:
-    container_name: client3
-    image: client:latest
-    entrypoint: /client
-    environment:
-      - CLI_ID=3
-    networks:
-      - testing_net
-    depends_on:
-      - server
-    volumes:
-      - type: bind
-        source: ./client/config.yaml
-        target: /config.yaml
-      - type: bind
-        source: ./.data
-        target: /.data
-
->>>>>>> ej7
 networks:
   testing_net:
     ipam:

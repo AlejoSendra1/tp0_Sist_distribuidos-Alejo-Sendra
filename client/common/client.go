@@ -71,7 +71,7 @@ func (c *Client) StartClient() error {
 		}
 		log.Infof("action: get_data_csv | result: success")
 		
-		err = agencySocket.SendBets(bets,c.config.ID,c.config.BatchAmount) 
+		err = agencySocket.SendBets(bets,c.config.ID) 
 		if err != nil {
 			log.Criticalf("%s", err)
 			return err

@@ -147,11 +147,11 @@ La cantidad máxima de apuestas dentro de cada _batch_ debe ser configurable des
 
 Por su parte, el servidor deberá responder con éxito solamente si todas las apuestas del _batch_ fueron procesadas correctamente.
 
-### Ejercicio N°7:
+## Solución propuesta 
+Para la solución de este ejercicio se ha considerado mantener la simpleza del protocolo anterior.
 
-Modificar los clientes para que notifiquen al servidor al finalizar con el envío de todas las apuestas y así proceder con el sorteo.
-Inmediatamente después de la notificacion, los clientes consultarán la lista de ganadores del sorteo correspondientes a su agencia.
-Una vez el cliente obtenga los resultados, deberá imprimir por log: `action: consulta_ganadores | result: success | cant_ganadores: ${CANT}`.
+### Estructura del Batch
+Cada paquete de batch comienza con un Header de 2 bytes que indica el tamaño total de la carga útil (payload), permitiendo al servidor predecir cuántos bytes debe leer del socket. Seguidamente, se envia el numero de la agencia y se concatenan las apuestas serializadas según el formato definido en el ejercicio anterior.
 
 El servidor deberá esperar la notificación de las 5 agencias para considerar que se realizó el sorteo e imprimir por log: `action: sorteo | result: success`.
 Luego de este evento, podrá verificar cada apuesta con las funciones `load_bets(...)` y `has_won(...)` y retornar los DNI de los ganadores de la agencia en cuestión. Antes del sorteo no se podrán responder consultas por la lista de ganadores con información parcial.
