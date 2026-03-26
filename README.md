@@ -134,48 +134,33 @@ Se deberá implementar un módulo de comunicación entre el cliente y el servido
 * Correcto empleo de sockets, incluyendo manejo de errores y evitando los fenómenos conocidos como [_short read y short write_](https://cs61.seas.harvard.edu/site/2018/FileDescriptors/).
 
 
-### Ejercicio N°6:
-Modificar los clientes para que envíen varias apuestas a la vez (modalidad conocida como procesamiento por _chunks_ o _batchs_). 
-Los _batchs_ permiten que el cliente registre varias apuestas en una misma consulta, acortando tiempos de transmisión y procesamiento.
+## Solución propuesta
+Para el desarrollo de la solución se modificó el cliente y el servidor respetar un protocolo simple y secuencial.
 
-La información de cada agencia será simulada por la ingesta de su archivo numerado correspondiente, provisto por la cátedra dentro de `.data/datasets.zip`.
-Los archivos deberán ser inyectados en los containers correspondientes y persistido por fuera de la imagen (hint: `docker volumes`), manteniendo la convencion de que el cliente N utilizara el archivo de apuestas `.data/agency-{N}.csv` .
+### Protocolo
+Dado que un cliente debe simplemente enviar los datos de la apuesta obtenidos mediante las variables de entorno, se determino la implementación de un protocolo extremadamente simple donde se cuenta con un unico tipo de mensaje del lado cliente y dos posibles respuestas del lado servidor.
+El cliente envia la apuesta y el servidor contesta con "Ok" si ha podido guardar la apuesta correctamente, o "Error" (junto con una descripcion del mismo) en caso contrario.
 
-En el servidor, si todas las apuestas del *batch* fueron procesadas correctamente, imprimir por log: `action: apuesta_recibida | result: success | cantidad: ${CANTIDAD_DE_APUESTAS}`. En caso de detectar un error con alguna de las apuestas, debe responder con un código de error a elección e imprimir: `action: apuesta_recibida | result: fail | cantidad: ${CANTIDAD_DE_APUESTAS}`.
+### Paquetes
+Para el envio y recepción de los paquetes se ha considerado la serialización, y desserialización, de los datos en bytes de la siguiente manera:
 
-La cantidad máxima de apuestas dentro de cada _batch_ debe ser configurable desde config.yaml. Respetar la clave `batch: maxAmount`, pero modificar el valor por defecto de modo tal que los paquetes no excedan los 8kB. 
+* Para el envio de bets, dado que es el unico mensaje enviado por la agencia/cliente, la estructura planteada es:
+  - 1 Byte -> Primer byte para indicar el número identificador de la agencia.
+  - 4 Bytes -> Cuatro bytes para indicar el documento de la persona participante (considerando que este debe ser un numero positivo).
+  - 8 Bytes -> Ocho bytes para indicar el número de la apuesta.
+  - 2 Bytes -> Ocho bytes para indicar año de nacimiento.
+  - 1 Byte -> un byte para indicar mes de nacimiento.
+  - 1 Byte -> un byte para indicar dia de nacimiento.
+  - 1 Byte -> un byte para indicar el tamaño, en bytes, del nombre del apostador.
+  - 1/64 Bytes -> Campo de tamaño variable para el nombre del apostador (no se admite nombre vacío, nombres de tamaño mayor son recortados de forma que respeten el tamaño maximo admitido).
+  - 1 Byte -> un byte para indicar el tamaño, en bytes, del apellido del apostador.
+  - 1/64 Bytes -> Campo de tamaño variable para el apellido del apostador (no se admite nombre vacío, nombres de tamaño mayor son recortados de forma que respeten el tamaño maximo admitido).
+ 
+Se puede recurrir al archivo `Paquete_bets_Inicial.jpg` en la carpeta visuals para una representacion gráfica del orden y tamaño de los campos
 
-Por su parte, el servidor deberá responder con éxito solamente si todas las apuestas del _batch_ fueron procesadas correctamente.
+* Para la respuesta del servidor este responde con:
+  - 1 Byte ->  Tamaño del cuerpo del mensaje en bytes.
+  - variable -> Cuerpo del msj ( 2 en caso de "Ok", variable en el caso de error para poder recibir una descripcion del error producido del lado del servidor)
 
-### Ejercicio N°7:
 
-Modificar los clientes para que notifiquen al servidor al finalizar con el envío de todas las apuestas y así proceder con el sorteo.
-Inmediatamente después de la notificacion, los clientes consultarán la lista de ganadores del sorteo correspondientes a su agencia.
-Una vez el cliente obtenga los resultados, deberá imprimir por log: `action: consulta_ganadores | result: success | cant_ganadores: ${CANT}`.
 
-El servidor deberá esperar la notificación de las 5 agencias para considerar que se realizó el sorteo e imprimir por log: `action: sorteo | result: success`.
-Luego de este evento, podrá verificar cada apuesta con las funciones `load_bets(...)` y `has_won(...)` y retornar los DNI de los ganadores de la agencia en cuestión. Antes del sorteo no se podrán responder consultas por la lista de ganadores con información parcial.
-
-Las funciones `load_bets(...)` y `has_won(...)` son provistas por la cátedra y no podrán ser modificadas por el alumno.
-
-No es correcto realizar un broadcast de todos los ganadores hacia todas las agencias, se espera que se informen los DNIs ganadores que correspondan a cada una de ellas.
-
-## Parte 3: Repaso de Concurrencia
-En este ejercicio es importante considerar los mecanismos de sincronización a utilizar para el correcto funcionamiento de la persistencia.
-
-### Ejercicio N°8:
-
-Modificar el servidor para que permita aceptar conexiones y procesar mensajes en paralelo. En caso de que el alumno implemente el servidor en Python utilizando _multithreading_,  deberán tenerse en cuenta las [limitaciones propias del lenguaje](https://wiki.python.org/moin/GlobalInterpreterLock).
-
-## Condiciones de Entrega
-Se espera que los alumnos realicen un _fork_ del presente repositorio para el desarrollo de los ejercicios y que aprovechen el esqueleto provisto tanto (o tan poco) como consideren necesario.
-
-Cada ejercicio deberá resolverse en una rama independiente con nombres siguiendo el formato `ej${Nro de ejercicio}`. Se permite agregar commits en cualquier órden, así como crear una rama a partir de otra, pero al momento de la entrega deberán existir 8 ramas llamadas: ej1, ej2, ..., ej7, ej8.
- (hint: verificar listado de ramas y últimos commits con `git ls-remote`)
-
-Se espera que se redacte una sección del README en donde se indique cómo ejecutar cada ejercicio y se detallen los aspectos más importantes de la solución provista, como ser el protocolo de comunicación implementado (Parte 2) y los mecanismos de sincronización utilizados (Parte 3).
-
-Se proveen [pruebas automáticas](https://github.com/7574-sistemas-distribuidos/tp0-tests) de caja negra. Se exige que la resolución de los ejercicios pase tales pruebas, o en su defecto que las discrepancias sean justificadas y discutidas con los docentes antes del día de la entrega. 
-
-El incumplimiento de las pruebas es condición de desaprobación, pero su cumplimiento no es suficiente para la aprobación.  Se pide a los alumnos leer atentamente y **tener en cuenta** los criterios de corrección informados  [en el campus](https://campusgrado.fi.uba.ar/mod/page/view.php?id=73393).
-Respetar el formato y contenido las entradas de logs descritas en los ejercicios, pues son las que se chequean en cada uno de los tests.
