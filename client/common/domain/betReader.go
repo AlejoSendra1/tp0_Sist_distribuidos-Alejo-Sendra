@@ -21,8 +21,8 @@ type Bet struct {
 	LastName string
 }
 
-type Reader {
-	file *os.file
+type Reader struct {
+	file *os.File
 	scanner *bufio.Scanner
 	batchAmount int
 }
@@ -38,8 +38,8 @@ const (
 
 var log = logging.MustGetLogger("log")
 
-func Close() {
-	file.close()
+func (r *Reader) Close() {
+	r.file.Close()
 }
 
 func NewReader(agencyNum string, batchAmount int) (*Reader,error) {
@@ -50,9 +50,9 @@ func NewReader(agencyNum string, batchAmount int) (*Reader,error) {
 	log.Infof("action: opening_csv | result: success")
 
 	reader := &Reader{
-		file: file
-		scanner: bufio.NewScanner(file)
-		batchAmount: batchAmount
+		file: file,
+		scanner: bufio.NewScanner(file),
+		batchAmount: batchAmount,
 	}
 	return reader, nil
 }
@@ -61,11 +61,8 @@ func NewReader(agencyNum string, batchAmount int) (*Reader,error) {
 func (r *Reader)GetBatch() ([]Bet, error) {
 	var bets []Bet
 	
-    for len(bets) < batchAmount && scanner.Scan() {
-		line := scanner.Text()
-        if err != nil {
-			return bets,errors.Wrapf(err ,"error reading from file")
-        }
+    for len(bets) < r.batchAmount && r.scanner.Scan() {
+		line := r.scanner.Text()
 		new_bet, _ := createBetFromStr(line)
 		bets = append(bets, new_bet)
     }

@@ -13,12 +13,15 @@ class Server:
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self.is_shutting_down = False
+        self.client_socket = None
         signal.signal(signal.SIGTERM, self.handle_sigterm)
 
     def handle_sigterm(self, signum, frame):
         logging.info("action: shutting_down | result: in_progress")
         self.is_shutting_down = True       
-
+        self.gracefull_shutdown()
+    
+    def gracefull_shutdown(self):
         try:
             logging.info("action: clossing_listening_socket | result: in_progress")
             self._server_socket.close()
@@ -28,9 +31,9 @@ class Server:
             exit(1)
 
         try:
-            if self.client_sock is not None:
+            if self.client_socket is not None:
                 logging.info("action: clossing_client_socket | result: in_progress")
-                self.client_sock.close()
+                self.client_socket.close()
                 logging.info("action: clossing_client_socket | result: success")
         except OSError as e:
             logging.info("action: clossing_client_socket | result: fail")
@@ -38,6 +41,7 @@ class Server:
         
         logging.info("action: shutting_down | result: success")    
         exit(0)
+
 
     def run(self):
         """
@@ -56,13 +60,16 @@ class Server:
                 break
             
             client_bet_socket = Client_bet_socket(new_client_socket)
-
+            self.client_socket = client_bet_socket
+            
             while not self.is_shutting_down:
                 bets = client_bet_socket.handle_client_connection()
                 if len(bets) == 0:
                     break
                 store_bets(bets)
-                        
+            
+            self.client_socket.close()
+                  
         self.gracefull_shutdown()
     
     def __accept_new_connection(self):

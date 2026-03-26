@@ -50,29 +50,26 @@ func (as *AgencySocket) SendBets(bets []domain.Bet, id string, batchAmount int) 
 	// Sends the given Bet to the server and returns the server response 
 	// in case communication is successfull
 	betsSent := 0 
-	defer as.Close()
-	for betsSent < len(bets) {
-		serialized, betsInBatch := createBatch(bets, betsSent, id, batchAmount)
-		betsSent += betsInBatch
+	//defer as.Close()
+	serialized, betsInBatch := createBatch(bets, betsSent, id, batchAmount)
 
-		err := as.writeExact(serialized)
-		if err != nil {
-			log.Criticalf("action: send_bets | result: fail | client_id: %v | error: %v", id, err)
-			return err
-		}
-		log.Infof("action: send_bets | result: success | se_enviaron: \"%v\" en el batch", betsInBatch)
+	err := as.writeExact(serialized)
+	if err != nil {
+		log.Criticalf("action: send_bets | result: fail | client_id: %v | error: %v", id, err)
+		return err
+	}
+	log.Infof("action: send_bets | result: success | se_enviaron: \"%v\" en el batch", betsInBatch)
 
-		servResponse, err := as.GetServerResponse()
-		if err != nil {
-			log.Criticalf("action: receive_message | result: fail | client_id: %v | error: %v",
-				id,
-				err,
-			)
-		} else {
-			log.Infof("action: server_response | result: success | answer: %v",
-				servResponse,
-			)
-		}
+	servResponse, err := as.GetServerResponse()
+	if err != nil {
+		log.Criticalf("action: receive_message | result: fail | client_id: %v | error: %v",
+			id,
+			err,
+		)
+	} else {
+		log.Infof("action: server_response | result: success | answer: %v",
+			servResponse,
+		)
 	}
 
 	return nil
@@ -125,6 +122,6 @@ func (as *AgencySocket) GetServerResponse() (string,error) {
 func (as *AgencySocket) Close() {
 	as.conn.Close()
 	log.Infof("action: socket_closed | result: success | client_id: %v",
-		id,		
+		as.id,		
 	)
 }

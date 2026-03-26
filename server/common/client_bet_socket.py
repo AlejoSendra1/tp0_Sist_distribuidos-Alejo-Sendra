@@ -9,29 +9,29 @@ BATCH_HEADER_SIZE = 3
 class Client_bet_socket:
     def __init__(self, sockett):
         self.socket = sockett
+
+    def close(self):
+        try:
+            addr = self.socket.getpeername()
+            self.socket.close()
+            logging.info(f'action: clossing_client_socket | result: success | ip: {addr[0]}')
+        finally:
+            return
     
     def handle_client_connection(self) -> list:
         """Read message from a specific client socket and closes the socket
         If a problem arises in the communication with the client, the
         client socket will also be closed """
 
-        addr = self.socket.getpeername()
         bets = []
 
         try:
             bets = self.get_client_bets()
-
         except OSError as e:
-            if self.is_shutting_down:
-                return
-            logging.error("action: receive_message | result: fail | error: {e}")
-
+            return []
         except Exception as err:
             self.send_response(f'Error: {err}')
-            return
-        finally:
-            self.socket.close()
-            logging.info(f'action: clossing_client_socket | result: success | ip: {addr[0]}')
+            return            
         
         return bets
         

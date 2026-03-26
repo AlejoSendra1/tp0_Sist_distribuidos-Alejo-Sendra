@@ -55,21 +55,21 @@ func (c *Client) StartClient() error {
 	reader, err := domain.NewReader(c.config.ID,c.config.BatchAmount)
 	defer reader.Close()
 	if err != nil {
-		return nil, err
+		return err
     }
 	log.Infof("action: apuestas_enviadas | result: in_progress")
 
 	for {
 		log.Infof("action: get_data_csv | result: in_progress")
-		bets, DataErr := reader.GetBatch()
-		if DataErr != nil {
+		bets, dataErr := reader.GetBatch()
+		if dataErr != nil {
 			log.Infof("action: get_data_csv | result: fail")
 			log.Criticalf("%v", err)
-			return
+			return dataErr
 		}
 		log.Infof("action: get_data_csv | result: success")
 		
-		err = agencySocket.SendBets(bets,c.config.ID) 
+		err = agencySocket.SendBets(bets,c.config.ID,c.config.BatchAmount) 
 		if err != nil {
 			log.Criticalf("%s", err)
 			return err
