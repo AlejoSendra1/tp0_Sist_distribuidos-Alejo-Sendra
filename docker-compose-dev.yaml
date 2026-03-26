@@ -50,6 +50,7 @@ services:
         source: ./.data
         target: /.data
 
+<<<<<<< HEAD
   client3:
     container_name: client3
     image: client:latest
@@ -104,6 +105,8 @@ services:
         source: ./.data
         target: /.data
 
+=======
+>>>>>>> ej6
 networks:
   testing_net:
     ipam:

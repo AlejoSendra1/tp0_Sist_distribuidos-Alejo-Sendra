@@ -21,6 +21,12 @@ type Bet struct {
 	LastName string
 }
 
+type Reader struct {
+	file *os.File
+	scanner *bufio.Scanner
+	batchAmount int
+}
+
 const (
 	FIRSTNAME_CSV_POSITION = 0
 	LASTNAME_CSV_POSITION = 1
@@ -32,27 +38,32 @@ const (
 
 var log = logging.MustGetLogger("log")
 
+func (r *Reader) Close() {
+	r.file.Close()
+}
 
-
-// Gets and validates all fields to create the client Bet
-func GetBets(agencyNum string) ([]Bet, error) {
-	var bets []Bet
-	
+func NewReader(agencyNum string, batchAmount int) (*Reader,error) {
 	file, err := os.Open(fmt.Sprintf("/.data/agency-%v.csv",agencyNum))
     if err != nil {
-		return bets, err
+		return nil, err
     }
 
-    defer file.Close()
-    scanner := bufio.NewScanner(file)
-    for scanner.Scan() {
-		line := scanner.Text()
-        if err != nil {
-			return bets,errors.Wrapf(err ,"error reading from file")
-        }
+	reader := &Reader{
+		file: file,
+		scanner: bufio.NewScanner(file),
+		batchAmount: batchAmount,
+	}
+	return reader, nil
+}
+
+// Gets as many bets from the file as indicated by the batchAmount
+func (r *Reader)GetBatch() ([]Bet, error) {
+	var bets []Bet
+	
+    for len(bets) < r.batchAmount && r.scanner.Scan() {
+		line := r.scanner.Text()
 		new_bet, _ := createBetFromStr(line)
 		bets = append(bets, new_bet)
-
     }
 	
     return bets, nil

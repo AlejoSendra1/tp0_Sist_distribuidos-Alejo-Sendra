@@ -19,21 +19,26 @@ class Server:
     def handle_sigterm(self, signum, frame):
         logging.info("action: shutting_down | result: in_progress")
         self.is_shutting_down = True       
-
         self.gracefull_shutdown()
-        
-        logging.info("action: shutting_down | result: success")    
-        exit(0)
-
+    
     def gracefull_shutdown(self):
+        try:
+            logging.info("action: clossing_listening_socket | result: in_progress")
+            self._server_socket.close()
+            logging.info("action: clossing_listening_socket | result: success")
+        except OSError as e:
+            logging.info("action: clossing_listening_socket | result: fail")
+
         for agency_socket in self.agencies_sockets:
             try:
-                # Check if socket is still valid before calling getpeername
                 peer = agency_socket.socket.getpeername()
                 agency_socket.close()
                 logging.info(f'action: clossing_client_socket | result: success | ip: {peer}')
             except OSError:
                 logging.info('action: clossing_client_socket | result: socket_already_closed')
+        
+        logging.info("action: shutting_down | result: success")    
+        exit(0)
 
     def run(self):
         """
@@ -43,24 +48,23 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-
-        # the server
         agencies_done = 0
         
         client_amount = int(os.getenv("CLIENT_AMOUNT", "0"))
         try: 
-            while not self.is_shutting_down:
-                if agencies_done >= client_amount:
-                    break
+            while not self.is_shutting_down and agencies_done < client_amount:
                 new_client_socket = self.__accept_new_connection()
                 
                 if self.is_shutting_down:
                     break
                 
                 client_bet_socket = Client_bet_socket(new_client_socket)
-                bets = client_bet_socket.handle_client_connection() # NO CERRAR EL SOCKET
-                store_bets(bets)
                 self.agencies_sockets.append(client_bet_socket)
+                while not self.is_shutting_down:
+                    bets = client_bet_socket.handle_client_connection()
+                    if len(bets) == 0:
+                        break
+                    store_bets(bets)
                 agencies_done += 1
 
             logging.info('action: sorteo | result: success')
