@@ -23,23 +23,27 @@ class Server:
     def handle_sigterm(self, signum, frame):
         logging.info("action: shutting_down | result: in_progress")
         self.is_shutting_down = True       
-
         self.gracefull_shutdown()
-        
-        logging.info("action: shutting_down | result: success")    
-        exit(0)
-
+    
     def gracefull_shutdown(self):
         for thread in self.clients_threads:
             thread.join()
+        try:
+            logging.info("action: clossing_listening_socket | result: in_progress")
+            self._server_socket.close()
+            logging.info("action: clossing_listening_socket | result: success")
+        except OSError as e:
+            logging.info("action: clossing_listening_socket | result: fail")
         for agency_socket in self.agencies_sockets:
             try:
-                # Check if socket is still valid before calling getpeername
                 peer = agency_socket.socket.getpeername()
                 agency_socket.close()
                 logging.info(f'action: clossing_client_socket | result: success | ip: {peer}')
             except OSError:
                 logging.info('action: clossing_client_socket | result: socket_already_closed')
+        
+        logging.info("action: shutting_down | result: success")    
+        exit(0)
 
     def run(self):
         """
@@ -49,7 +53,6 @@ class Server:
         communication with a client. After client with communucation
         finishes, servers starts to accept new connections again
         """
-
         client_amount = int(os.getenv("CLIENT_AMOUNT", "0"))
         barrier = threading.Barrier(client_amount + 1)
 
@@ -96,10 +99,12 @@ class Server:
         return c
 
     def handle_client_connection(self, client_bet_socket: Client_bet_socket, barrier: threading.Barrier):
-        bets = client_bet_socket.handle_client_connection()
-
-        with self.bets_utils_lock:
-            store_bets(bets)
+        while not self.is_shutting_down:
+            bets = client_bet_socket.handle_client_connection()
+            if len(bets) == 0:
+                break
+            with self.bets_utils_lock:
+                store_bets(bets)
 
         barrier.wait()
                 

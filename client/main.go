@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common"
-	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common/domain"
 )
 
 var log = logging.MustGetLogger("log")
@@ -109,14 +108,7 @@ func main() {
 		BatchAmount:    v.GetInt("batch.maxAmount"),
 	}
 
-	bets, DataErr := domain.GetBets(clientConfig.ID)
-	if DataErr != nil {
-		log.Infof("source: %v | action: get_data_csv | result: fail",clientConfig.ID)
-		log.Criticalf("%v", err)
-		return
-	}
-
 	client := common.NewClient(clientConfig)
-	client.StartClient(bets)
+	client.StartClient()
 	log.Infof("source: %v | action: finish | result: success",clientConfig.ID)
 }

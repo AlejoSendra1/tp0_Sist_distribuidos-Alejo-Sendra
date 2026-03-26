@@ -12,7 +12,12 @@ class Client_bet_socket:
         self.socket = sockett
 
     def close(self):
-        self.socket.close()
+        try:
+            addr = self.socket.getpeername()
+            self.socket.close()
+            logging.info(f'action: clossing_client_socket | result: success | ip: {addr[0]}')
+        finally:
+            return
 
     def send_response(self,content: str):
         """Writes exactly the 'content' (string) given in the socket"""
@@ -33,20 +38,15 @@ class Client_bet_socket:
         If a problem arises in the communication with the client, the
         client socket will also be closed """
 
-        addr = self.socket.getpeername()
         bets = []
 
         try:
             bets = self.get_client_bets()
-
         except OSError as e:
-            if self.is_shutting_down:
-                return
-            logging.error("action: receive_message | result: fail | error: {e}")
-
+            return []
         except Exception as err:
             self.send_response(f'Error: {err}')
-            return
+            return []
         
         return bets
         
@@ -65,32 +65,31 @@ class Client_bet_socket:
     def get_client_bets(self) -> list:
         """ el primer byte/bytes corresponderan a la cantidad de bets a leer"""
         bets = []
-
         bytes_to_read = BATCH_HEADER_SIZE
 
-        while bytes_to_read > 0:
-            at_least_one_with_err = False
-            bytes_to_read = struct.unpack('>H', self.recv_exact(2))[0]
-            agency = struct.unpack('>B', self.recv_exact(1))[0]
+        
+        at_least_one_with_err = False
+        bytes_to_read = struct.unpack('>H', self.recv_exact(2))[0]
+        agency = struct.unpack('>B', self.recv_exact(1))[0]
 
-            bets_obtained = 0
-            read_bytes = 0
-            while read_bytes < bytes_to_read:
+        bets_obtained = 0
+        read_bytes = 0
+        while read_bytes < bytes_to_read:
 
-                new_bet, bytes_read = self.get_client_bet(agency)
-                read_bytes += bytes_read
-                if new_bet is not None:
-                    bets_obtained += 1
-                    bets.append(new_bet)
-                else:
-                    at_least_one_with_err = True
-            
-            if at_least_one_with_err:
-                logging.info(f'action: apuesta_recibida | result: fail | cantidad: {bets_obtained}')
-                self.send_response("Error: At least one bet from the batch has a wrong format")
+            new_bet, bytes_read = self.get_client_bet(agency)
+            read_bytes += bytes_read
+            if new_bet is not None:
+                bets_obtained += 1
+                bets.append(new_bet)
             else:
-                logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_obtained}')
-                self.send_response("Ok")
+                at_least_one_with_err = True
+        
+        if at_least_one_with_err:
+            logging.info(f'action: apuesta_recibida | result: fail | cantidad: {bets_obtained}')
+            self.send_response("Error: At least one bet from the batch has a wrong format")
+        else:
+            logging.info(f'action: apuesta_recibida | result: success | cantidad: {bets_obtained}')
+            self.send_response("Ok")
 
         return bets
         
